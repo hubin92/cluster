@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-¼¯Èº¹ÜÀí²å¼ş - API½Ó¿Ú
-Ìá¹©Ãæ°åµ÷ÓÃµÄAPI½Ó¿Ú
+é›†ç¾¤ç®¡ç†æ’ä»¶ - APIæ¥å£
+é¢æ¿é€šè¿‡æ­¤æ–‡ä»¶è°ƒç”¨æ’ä»¶åŠŸèƒ½
 """
 
 import os
@@ -17,86 +17,60 @@ from cluster_main import ClusterManager, ARCH
 manager = ClusterManager()
 
 
-def get_args():
-    """»ñÈ¡ÇëÇó²ÎÊı"""
-    import request
-    args = {}
-    for k in request.form:
-        args[k] = request.form[k]
-    for k in request.args:
-        args[k] = request.args[k]
-    return args
-
-
 def return_json(status, msg='', data=None):
-    """·µ»ØJSON"""
+    """ç»Ÿä¸€JSONè¿”å›"""
     result = {'status': status, 'msg': msg}
     if data is not None:
         result['data'] = data
     return json.dumps(result, ensure_ascii=False)
 
 
-# ========== ·Ö×éAPI ==========
+# ========== åˆ†ç»„ API ==========
 
 def get_groups():
-    """»ñÈ¡ËùÓĞ·Ö×é"""
     groups = manager.get_all_groups()
     return return_json(True, 'ok', groups)
 
 
-def add_group():
-    """Ìí¼Ó·Ö×é"""
-    args = get_args()
-    name = args.get('name', '')
+def add_group(name='', description='', color='#1E9FFF'):
     if not name:
-        return return_json(False, '·Ö×éÃû³Æ²»ÄÜÎª¿Õ')
-    description = args.get('description', '')
-    color = args.get('color', '#1E9FFF')
+        return return_json(False, 'åˆ†ç»„åç§°ä¸èƒ½ä¸ºç©º')
     manager.add_group(name, description, color)
-    return return_json(True, 'Ìí¼Ó³É¹¦')
+    return return_json(True, 'æ·»åŠ æˆåŠŸ')
 
 
-def update_group():
-    """¸üĞÂ·Ö×é"""
-    args = get_args()
-    group_id = int(args.get('id', 0))
-    if not group_id:
-        return return_json(False, '·Ö×éID²»ÄÜÎª¿Õ')
+def update_group(id=0, name='', description='', color=''):
+    if not id:
+        return return_json(False, 'åˆ†ç»„IDä¸èƒ½ä¸ºç©º')
     kwargs = {}
-    for key in ['name', 'description', 'color']:
-        if key in args:
-            kwargs[key] = args[key]
-    manager.update_group(group_id, **kwargs)
-    return return_json(True, '¸üĞÂ³É¹¦')
+    if name:
+        kwargs['name'] = name
+    if description:
+        kwargs['description'] = description
+    if color:
+        kwargs['color'] = color
+    manager.update_group(int(id), **kwargs)
+    return return_json(True, 'æ›´æ–°æˆåŠŸ')
 
 
-def delete_group():
-    """É¾³ı·Ö×é"""
-    args = get_args()
-    group_id = int(args.get('id', 0))
-    if not group_id:
-        return return_json(False, '·Ö×éID²»ÄÜÎª¿Õ')
-    manager.delete_group(group_id)
-    return return_json(True, 'É¾³ı³É¹¦')
+def delete_group(id=0):
+    if not id:
+        return return_json(False, 'åˆ†ç»„IDä¸èƒ½ä¸ºç©º')
+    manager.delete_group(int(id))
+    return return_json(True, 'åˆ é™¤æˆåŠŸ')
 
 
-def reorder_groups():
-    """ÖØĞÂÅÅĞò·Ö×é"""
-    args = get_args()
-    ids = args.get('ids', '')
+def reorder_groups(ids=''):
     if not ids:
-        return return_json(False, 'ÅÅĞòID²»ÄÜÎª¿Õ')
+        return return_json(False, 'æ’åºIDä¸èƒ½ä¸ºç©º')
     group_ids = [int(x) for x in ids.split(',')]
     manager.reorder_groups(group_ids)
-    return return_json(True, 'ÅÅĞò³É¹¦')
+    return return_json(True, 'æ’åºæˆåŠŸ')
 
 
-# ========== ½ÚµãAPI ==========
+# ========== èŠ‚ç‚¹ API ==========
 
-def get_nodes():
-    """»ñÈ¡ËùÓĞ½Úµã"""
-    args = get_args()
-    group_id = args.get('group_id', '')
+def get_nodes(group_id=''):
     if group_id:
         nodes = manager.get_nodes_by_group(int(group_id))
     else:
@@ -104,157 +78,119 @@ def get_nodes():
     return return_json(True, 'ok', {'nodes': nodes, 'arch': ARCH})
 
 
-def add_node():
-    """Ìí¼Ó½Úµã"""
-    args = get_args()
-    required = ['name', 'host', 'api_key', 'api_secret']
-    for field in required:
-        if not args.get(field):
-            return return_json(False, f'{field} ²»ÄÜÎª¿Õ')
+def add_node(name='', host='', port=7200, api_key='', api_secret='',
+             protocol='http', group_id=0, arch='', notes=''):
+    if not name or not host or not api_key or not api_secret:
+        return return_json(False, 'å¿…å¡«å­—æ®µä¸èƒ½ä¸ºç©º')
     
     node_data = {
-        'name': args.get('name'),
-        'host': args.get('host'),
-        'port': int(args.get('port', 7200)),
-        'api_key': args.get('api_key'),
-        'api_secret': args.get('api_secret'),
-        'protocol': args.get('protocol', 'http'),
-        'group_id': int(args.get('group_id', 0)),
-        'arch': args.get('arch', ''),
-        'notes': args.get('notes', '')
+        'name': name,
+        'host': host,
+        'port': int(port),
+        'api_key': api_key,
+        'api_secret': api_secret,
+        'protocol': protocol or 'http',
+        'group_id': int(group_id),
+        'arch': arch or '',
+        'notes': notes or ''
     }
     manager.add_node(**node_data)
-    return return_json(True, 'Ìí¼Ó³É¹¦')
+    return return_json(True, 'æ·»åŠ æˆåŠŸ')
 
 
-def update_node():
-    """¸üĞÂ½Úµã"""
-    args = get_args()
-    node_id = int(args.get('id', 0))
-    if not node_id:
-        return return_json(False, '½ÚµãID²»ÄÜÎª¿Õ')
-    
-    kwargs = {}
-    for key in ['name', 'host', 'port', 'api_key', 'api_secret', 'protocol', 'group_id', 'arch', 'notes']:
-        if key in args:
-            kwargs[key] = args[key] if key != 'port' else int(args[key])
-    manager.update_node(node_id, **kwargs)
-    return return_json(True, '¸üĞÂ³É¹¦')
+def update_node(id=0, **kwargs):
+    if not id:
+        return return_json(False, 'èŠ‚ç‚¹IDä¸èƒ½ä¸ºç©º')
+    update_data = {}
+    for key in ['name', 'host', 'port', 'api_key', 'api_secret',
+                'protocol', 'group_id', 'arch', 'notes']:
+        if key in kwargs and kwargs[key]:
+            update_data[key] = int(kwargs[key]) if key == 'port' else kwargs[key]
+    manager.update_node(int(id), **update_data)
+    return return_json(True, 'æ›´æ–°æˆåŠŸ')
 
 
-def delete_node():
-    """É¾³ı½Úµã"""
-    args = get_args()
-    node_id = int(args.get('id', 0))
-    if not node_id:
-        return return_json(False, '½ÚµãID²»ÄÜÎª¿Õ')
-    manager.delete_node(node_id)
-    return return_json(True, 'É¾³ı³É¹¦')
+def delete_node(id=0):
+    if not id:
+        return return_json(False, 'èŠ‚ç‚¹IDä¸èƒ½ä¸ºç©º')
+    manager.delete_node(int(id))
+    return return_json(True, 'åˆ é™¤æˆåŠŸ')
 
 
-def reorder_nodes():
-    """ÖØĞÂÅÅĞò½Úµã"""
-    args = get_args()
-    ids = args.get('ids', '')
+def reorder_nodes(ids=''):
     if not ids:
-        return return_json(False, 'ÅÅĞòID²»ÄÜÎª¿Õ')
+        return return_json(False, 'æ’åºIDä¸èƒ½ä¸ºç©º')
     node_ids = [int(x) for x in ids.split(',')]
     manager.reorder_nodes(node_ids)
-    return return_json(True, 'ÅÅĞò³É¹¦')
+    return return_json(True, 'æ’åºæˆåŠŸ')
 
 
-def move_node():
-    """ÒÆ¶¯½Úµãµ½·Ö×é"""
-    args = get_args()
-    node_id = int(args.get('node_id', 0))
-    group_id = int(args.get('group_id', 0))
+def move_node(node_id=0, group_id=0):
     if not node_id:
-        return return_json(False, '½ÚµãID²»ÄÜÎª¿Õ')
-    manager.move_node_to_group(node_id, group_id)
-    return return_json(True, 'ÒÆ¶¯³É¹¦')
+        return return_json(False, 'èŠ‚ç‚¹IDä¸èƒ½ä¸ºç©º')
+    manager.move_node_to_group(int(node_id), int(group_id))
+    return return_json(True, 'ç§»åŠ¨æˆåŠŸ')
 
 
-def test_connection():
-    """²âÊÔ½ÚµãÁ¬½Ó"""
-    args = get_args()
-    node_id = int(args.get('id', 0))
+def test_connection(id=0):
+    if not id:
+        return return_json(False, 'èŠ‚ç‚¹IDä¸èƒ½ä¸ºç©º')
+    result = manager.test_node_connection(int(id))
+    return return_json(result.get('status', False),
+                       result.get('msg', ''),
+                       result.get('data'))
+
+
+# ========== æœåŠ¡ç®¡ç† API ==========
+
+def get_services(node_id=0):
     if not node_id:
-        return return_json(False, '½ÚµãID²»ÄÜÎª¿Õ')
-    result = manager.test_node_connection(node_id)
-    return return_json(result.get('status', False), result.get('msg', ''), result.get('data'))
-
-
-# ========== ·şÎñ¹ÜÀíAPI ==========
-
-def get_services():
-    """»ñÈ¡½Úµã·şÎñÁĞ±í"""
-    args = get_args()
-    node_id = int(args.get('node_id', 0))
-    if not node_id:
-        return return_json(False, '½ÚµãID²»ÄÜÎª¿Õ')
-    services = manager.get_node_services(node_id)
+        return return_json(False, 'èŠ‚ç‚¹IDä¸èƒ½ä¸ºç©º')
+    services = manager.get_node_services(int(node_id))
     return return_json(True, 'ok', {
         'services': services,
         'common_services': manager.get_common_services()
     })
 
 
-def service_action():
-    """Ö´ĞĞ·şÎñ²Ù×÷"""
-    args = get_args()
-    node_id = int(args.get('node_id', 0))
-    service_name = args.get('service_name', '')
-    action = args.get('action', '')  # start/stop/restart/reload
+def service_action(node_id=0, service_name='', action=''):
     if not node_id or not service_name or not action:
-        return return_json(False, '²ÎÊı²»ÍêÕû')
+        return return_json(False, 'å‚æ•°ä¸å®Œæ•´')
     if action not in ['start', 'stop', 'restart', 'reload']:
-        return return_json(False, 'ÎŞĞ§µÄ²Ù×÷')
-    result = manager.service_action(node_id, service_name, action)
+        return return_json(False, 'æ— æ•ˆçš„æ“ä½œ')
+    result = manager.service_action(int(node_id), service_name, action)
     return return_json(result.get('status', False), result.get('msg', ''))
 
 
-def add_service():
-    """Ìí¼Ó·şÎñµ½½Úµã"""
-    args = get_args()
-    node_id = int(args.get('node_id', 0))
-    service_name = args.get('service_name', '')
+def add_service(node_id=0, service_name='', auto_start=0,
+                config_path='', port=0, version=''):
     if not node_id or not service_name:
-        return return_json(False, '²ÎÊı²»ÍêÕû')
-    manager.db.add_service(node_id, service_name,
-                           auto_start=args.get('auto_start', 0),
-                           config_path=args.get('config_path', ''),
-                           port=int(args.get('port', 0)),
-                           version=args.get('version', ''))
-    return return_json(True, 'Ìí¼Ó³É¹¦')
+        return return_json(False, 'å‚æ•°ä¸å®Œæ•´')
+    manager.db.add_service(int(node_id), service_name,
+                           auto_start=int(auto_start),
+                           config_path=config_path or '',
+                           port=int(port),
+                           version=version or '')
+    return return_json(True, 'æ·»åŠ æˆåŠŸ')
 
 
-def update_service_auto_start():
-    """¸üĞÂ·şÎñ×ÔÆô¶¯×´Ì¬"""
-    args = get_args()
-    service_id = int(args.get('service_id', 0))
-    auto_start = int(args.get('auto_start', 0))
+def update_service_auto_start(service_id=0, auto_start=0):
     if not service_id:
-        return return_json(False, '·şÎñID²»ÄÜÎª¿Õ')
-    manager.db.update_service_auto_start(service_id, auto_start)
-    return return_json(True, '¸üĞÂ³É¹¦')
+        return return_json(False, 'æœåŠ¡IDä¸èƒ½ä¸ºç©º')
+    manager.db.update_service_auto_start(int(service_id), int(auto_start))
+    return return_json(True, 'æ›´æ–°æˆåŠŸ')
 
 
-def delete_service():
-    """É¾³ı·şÎñ"""
-    args = get_args()
-    service_id = int(args.get('service_id', 0))
+def delete_service(service_id=0):
     if not service_id:
-        return return_json(False, '·şÎñID²»ÄÜÎª¿Õ')
-    manager.db.delete_service(service_id)
-    return return_json(True, 'É¾³ı³É¹¦')
+        return return_json(False, 'æœåŠ¡IDä¸èƒ½ä¸ºç©º')
+    manager.db.delete_service(int(service_id))
+    return return_json(True, 'åˆ é™¤æˆåŠŸ')
 
 
-# ========== Êı¾İ¿âÅäÖÃAPI ==========
+# ========== æ•°æ®åº“é…ç½® API ==========
 
-def get_db_configs():
-    """»ñÈ¡Êı¾İ¿âÅäÖÃ"""
-    args = get_args()
-    node_id = args.get('node_id', '')
+def get_db_configs(node_id=''):
     if node_id:
         configs = manager.get_db_configs(int(node_id))
     else:
@@ -262,65 +198,50 @@ def get_db_configs():
     return return_json(True, 'ok', configs)
 
 
-def save_db_config():
-    """±£´æÊı¾İ¿âÅäÖÃ"""
-    args = get_args()
-    required = ['node_id', 'db_type', 'db_host', 'db_name', 'db_user', 'db_password']
-    for field in required:
-        if not args.get(field):
-            return return_json(False, f'{field} ²»ÄÜÎª¿Õ')
-    
+def save_db_config(node_id=0, db_type='mysql', db_host='127.0.0.1',
+                   db_port=3306, db_name='', db_user='', db_password='',
+                   db_prefix='mw_', status=1):
+    if not node_id or not db_name or not db_user:
+        return return_json(False, 'å¿…å¡«å­—æ®µä¸èƒ½ä¸ºç©º')
     db_config = {
-        'node_id': int(args.get('node_id')),
-        'db_type': args.get('db_type'),
-        'db_host': args.get('db_host'),
-        'db_port': int(args.get('db_port', 3306)),
-        'db_name': args.get('db_name'),
-        'db_user': args.get('db_user'),
-        'db_password': args.get('db_password'),
-        'db_prefix': args.get('db_prefix', 'mw_'),
-        'status': int(args.get('status', 1))
+        'node_id': int(node_id),
+        'db_type': db_type,
+        'db_host': db_host,
+        'db_port': int(db_port),
+        'db_name': db_name,
+        'db_user': db_user,
+        'db_password': db_password,
+        'db_prefix': db_prefix,
+        'status': int(status)
     }
     manager.save_db_config(**db_config)
-    return return_json(True, '±£´æ³É¹¦')
+    return return_json(True, 'ä¿å­˜æˆåŠŸ')
 
 
-# ========== ×ÓÃæ°åÉèÖÃAPI ==========
+# ========== å­é¢æ¿è®¾ç½® API ==========
 
-def get_sub_panel_configs():
-    """»ñÈ¡×ÓÃæ°åÅäÖÃ"""
-    args = get_args()
-    node_id = int(args.get('node_id', 0))
+def get_sub_panel_configs(node_id=0):
     if not node_id:
-        return return_json(False, '½ÚµãID²»ÄÜÎª¿Õ')
-    configs = manager.get_sub_panel_configs(node_id)
+        return return_json(False, 'èŠ‚ç‚¹IDä¸èƒ½ä¸ºç©º')
+    configs = manager.get_sub_panel_configs(int(node_id))
     return return_json(True, 'ok', configs)
 
 
-def save_sub_panel_config():
-    """±£´æ×ÓÃæ°åÅäÖÃ"""
-    args = get_args()
-    node_id = int(args.get('node_id', 0))
-    config_key = args.get('config_key', '')
-    config_value = args.get('config_value', '')
+def save_sub_panel_config(node_id=0, config_key='', config_value=''):
     if not node_id or not config_key:
-        return return_json(False, '²ÎÊı²»ÍêÕû')
-    manager.save_sub_panel_config(node_id, config_key, config_value)
-    return return_json(True, '±£´æ³É¹¦')
+        return return_json(False, 'å‚æ•°ä¸å®Œæ•´')
+    manager.save_sub_panel_config(int(node_id), config_key, config_value)
+    return return_json(True, 'ä¿å­˜æˆåŠŸ')
 
 
-# ========== ÈÕÖ¾API ==========
+# ========== æ—¥å¿— API ==========
 
-def get_logs():
-    """»ñÈ¡²Ù×÷ÈÕÖ¾"""
-    args = get_args()
-    limit = int(args.get('limit', 100))
-    logs = manager.get_logs(limit)
+def get_logs(limit=100):
+    logs = manager.get_logs(int(limit))
     return return_json(True, 'ok', logs)
 
 
 def get_arch_info():
-    """»ñÈ¡¼Ü¹¹ĞÅÏ¢"""
     return return_json(True, 'ok', {
         'arch': ARCH,
         'platform': sys.platform,
