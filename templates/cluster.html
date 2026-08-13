@@ -1,78 +1,57 @@
-<!-- ·þÎñ¹ÜÀíÒ³Ãæ -->
 <div class="cluster-services-page">
-    <style>
-        @import url('/plugins/cluster/static/css/cluster.css');
-    </style>
-    
+    <style>@import url('/plugins/cluster/static/css/cluster.css');</style>
+
     <div class="cluster-header">
-        <h2>
-            <i class="layui-icon layui-icon-util"></i> ·þÎñ¹ÜÀí - <span id="serviceNodeName"></span>
-        </h2>
+        <h2><i class="layui-icon layui-icon-util"></i> æœåŠ¡ç®¡ç† - <span id="serviceNodeName"></span></h2>
         <button class="layui-btn layui-btn-sm" onclick="history.back()">
-            <i class="layui-icon layui-icon-return"></i> ·µ»Ø
+            <i class="layui-icon layui-icon-return"></i> è¿”å›ž
         </button>
     </div>
 
     <div class="layui-tab layui-tab-brief" lay-filter="serviceTab">
         <ul class="layui-tab-title">
-            <li class="layui-this">·þÎñ¹ÜÀí</li>
-            <li>×ÔÆô¶¯¹ÜÀí</li>
-            <li>Êý¾Ý¿âÅäÖÃ</li>
-            <li>×ÓÃæ°åÉèÖÃ</li>
+            <li class="layui-this">æœåŠ¡ç®¡ç†</li>
+            <li>è‡ªå¯åŠ¨ç®¡ç†</li>
+            <li>æ•°æ®åº“é…ç½®</li>
+            <li>å­é¢æ¿è®¾ç½®</li>
         </ul>
         <div class="layui-tab-content">
-            <!-- ·þÎñ¹ÜÀí -->
+            <!-- æœåŠ¡ç®¡ç† -->
             <div class="layui-tab-item layui-show">
-                <table class="layui-table" id="serviceTable">
+                <table class="layui-table">
                     <thead>
-                        <tr>
-                            <th>·þÎñÃû³Æ</th>
-                            <th>µ±Ç°×´Ì¬</th>
-                            <th>¶Ë¿Ú</th>
-                            <th>°æ±¾</th>
-                            <th>²Ù×÷</th>
-                        </tr>
+                        <tr><th>æœåŠ¡åç§°</th><th>å½“å‰çŠ¶æ€</th><th>ç«¯å£</th><th>ç‰ˆæœ¬</th><th>æ“ä½œ</th></tr>
                     </thead>
-                    <tbody id="serviceTableBody">
-                    </tbody>
+                    <tbody id="serviceTableBody"></tbody>
                 </table>
                 <div class="service-add-area">
                     <select id="newServiceSelect" class="layui-input layui-input-sm" style="width:200px;display:inline-block;">
-                        <option value="">Ñ¡ÔñÒªÌí¼ÓµÄ·þÎñ...</option>
+                        <option value="">é€‰æ‹©è¦æ·»åŠ çš„æœåŠ¡...</option>
                     </select>
                     <button class="layui-btn layui-btn-sm layui-btn-normal" onclick="addServiceToNode()">
-                        <i class="layui-icon layui-icon-add-1"></i> Ìí¼Ó·þÎñ
+                        <i class="layui-icon layui-icon-add-1"></i> æ·»åŠ æœåŠ¡
                     </button>
                 </div>
             </div>
 
-            <!-- ×ÔÆô¶¯¹ÜÀí -->
+            <!-- è‡ªå¯åŠ¨ç®¡ç† -->
             <div class="layui-tab-item">
-                <table class="layui-table" id="autoStartTable">
-                    <thead>
-                        <tr>
-                            <th>·þÎñÃû³Æ</th>
-                            <th>×ÔÆô¶¯×´Ì¬</th>
-                            <th>²Ù×÷</th>
-                        </tr>
-                    </thead>
-                    <tbody id="autoStartTableBody">
-                    </tbody>
+                <table class="layui-table">
+                    <thead><tr><th>æœåŠ¡åç§°</th><th>è‡ªå¯åŠ¨çŠ¶æ€</th><th>æ“ä½œ</th></tr></thead>
+                    <tbody id="autoStartTableBody"></tbody>
                 </table>
             </div>
 
-            <!-- Êý¾Ý¿âÅäÖÃ -->
+            <!-- æ•°æ®åº“é…ç½® -->
             <div class="layui-tab-item">
                 <div class="db-config-form">
-                    <h3>Ö÷·þÎñÊý¾Ý¿âÅäÖÃ</h3>
-                    <p class="form-tip">Ê¹ÓÃÒÑ°²×°µÄ PostgreSQL¡¢MySQL¡¢MariaDB ½øÐÐÊÖ¶¯ÅäÖÃ</p>
-                    
-                    <form class="layui-form" id="dbConfigForm">
-                        <input type="hidden" id="dbNodeId">
+                    <h3>ä¸»æœåŠ¡æ•°æ®åº“é…ç½®</h3>
+                    <p class="form-tip">ä½¿ç”¨å·²å®‰è£…çš„ PostgreSQLã€MySQLã€MariaDB è¿›è¡Œæ‰‹åŠ¨é…ç½®</p>
+                    <form class="layui-form">
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Êý¾Ý¿âÀàÐÍ</label>
+                            <label class="layui-form-label">æ•°æ®åº“ç±»åž‹</label>
                             <div class="layui-input-block">
-                                <select id="dbType" lay-filter="dbType">
+                                <select id="dbType">
                                     <option value="mysql">MySQL</option>
                                     <option value="mariadb">MariaDB</option>
                                     <option value="postgresql">PostgreSQL</option>
@@ -80,48 +59,36 @@
                             </div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Ö÷»úµØÖ·</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="dbHost" class="layui-input" value="127.0.0.1">
-                            </div>
+                            <label class="layui-form-label">ä¸»æœºåœ°å€</label>
+                            <div class="layui-input-block"><input type="text" id="dbHost" class="layui-input" value="127.0.0.1"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">¶Ë¿Ú</label>
-                            <div class="layui-input-block">
-                                <input type="number" id="dbPort" class="layui-input" value="3306">
-                            </div>
+                            <label class="layui-form-label">ç«¯å£</label>
+                            <div class="layui-input-block"><input type="number" id="dbPort" class="layui-input" value="3306"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Êý¾Ý¿âÃû</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="dbName" class="layui-input" placeholder="mw_panel">
-                            </div>
+                            <label class="layui-form-label">æ•°æ®åº“å</label>
+                            <div class="layui-input-block"><input type="text" id="dbName" class="layui-input" placeholder="mw_panel"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">ÓÃ»§Ãû</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="dbUser" class="layui-input" placeholder="root">
-                            </div>
+                            <label class="layui-form-label">ç”¨æˆ·å</label>
+                            <div class="layui-input-block"><input type="text" id="dbUser" class="layui-input" placeholder="root"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">ÃÜÂë</label>
-                            <div class="layui-input-block">
-                                <input type="password" id="dbPassword" class="layui-input">
-                            </div>
+                            <label class="layui-form-label">å¯†ç </label>
+                            <div class="layui-input-block"><input type="password" id="dbPassword" class="layui-input"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">±íÇ°×º</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="dbPrefix" class="layui-input" value="mw_">
-                            </div>
+                            <label class="layui-form-label">è¡¨å‰ç¼€</label>
+                            <div class="layui-input-block"><input type="text" id="dbPrefix" class="layui-input" value="mw_"></div>
                         </div>
                         <div class="layui-form-item">
                             <div class="layui-input-block">
                                 <button type="button" class="layui-btn layui-btn-normal" onclick="saveDbConfig()">
-                                    <i class="layui-icon layui-icon-ok"></i> ±£´æÅäÖÃ
+                                    <i class="layui-icon layui-icon-ok"></i> ä¿å­˜é…ç½®
                                 </button>
                                 <button type="button" class="layui-btn layui-btn-warm" onclick="testDbConnection()">
-                                    <i class="layui-icon layui-icon-link"></i> ²âÊÔÁ¬½Ó
+                                    <i class="layui-icon layui-icon-link"></i> æµ‹è¯•è¿žæŽ¥
                                 </button>
                             </div>
                         </div>
@@ -129,58 +96,39 @@
                 </div>
             </div>
 
-            <!-- ×ÓÃæ°åÉèÖÃ -->
+            <!-- å­é¢æ¿è®¾ç½® -->
             <div class="layui-tab-item">
                 <div class="sub-panel-settings">
-                    <h3>×ÓÃæ°å·þÎñÉèÖÃ</h3>
-                    <p class="form-tip">ÅäÖÃ×ÓÃæ°åµÄ¸÷Ïî²ÎÊý</p>
-                    
-                    <form class="layui-form" id="subPanelForm">
+                    <h3>å­é¢æ¿æœåŠ¡è®¾ç½®</h3>
+                    <form class="layui-form">
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Ãæ°åÃû³Æ</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="subPanelName" class="layui-input" 
-                                       placeholder="×ÓÃæ°åÏÔÊ¾Ãû³Æ">
-                            </div>
+                            <label class="layui-form-label">é¢æ¿åç§°</label>
+                            <div class="layui-input-block"><input type="text" id="subPanelName" class="layui-input" placeholder="å­é¢æ¿æ˜¾ç¤ºåç§°"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Ãæ°å¶Ë¿Ú</label>
-                            <div class="layui-input-block">
-                                <input type="number" id="subPanelPort" class="layui-input" 
-                                       placeholder="7200" value="7200">
-                            </div>
+                            <label class="layui-form-label">é¢æ¿ç«¯å£</label>
+                            <div class="layui-input-block"><input type="number" id="subPanelPort" class="layui-input" value="7200"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Ãæ°åÓòÃû</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="subPanelDomain" class="layui-input" 
-                                       placeholder="¿ÉÑ¡£¬°ó¶¨ÓòÃû">
-                            </div>
+                            <label class="layui-form-label">é¢æ¿åŸŸå</label>
+                            <div class="layui-input-block"><input type="text" id="subPanelDomain" class="layui-input" placeholder="å¯é€‰"></div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">SSL</label>
-                            <div class="layui-input-block">
-                                <input type="checkbox" id="subPanelSSL" lay-skin="switch" lay-text="¿ªÆô|¹Ø±Õ">
-                            </div>
+                            <div class="layui-input-block"><input type="checkbox" id="subPanelSSL" lay-skin="switch" lay-text="å¼€å¯|å…³é—­"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">Ãæ°åÈë¿Ú</label>
-                            <div class="layui-input-block">
-                                <input type="text" id="subPanelEntrance" class="layui-input" 
-                                       placeholder="/admin" value="/admin">
-                            </div>
+                            <label class="layui-form-label">é¢æ¿å…¥å£</label>
+                            <div class="layui-input-block"><input type="text" id="subPanelEntrance" class="layui-input" value="/admin"></div>
                         </div>
                         <div class="layui-form-item">
-                            <label class="layui-form-label">×î´óÁ¬½ÓÊý</label>
-                            <div class="layui-input-block">
-                                <input type="number" id="subPanelMaxConn" class="layui-input" 
-                                       placeholder="100" value="100">
-                            </div>
+                            <label class="layui-form-label">æœ€å¤§è¿žæŽ¥æ•°</label>
+                            <div class="layui-input-block"><input type="number" id="subPanelMaxConn" class="layui-input" value="100"></div>
                         </div>
                         <div class="layui-form-item">
                             <div class="layui-input-block">
                                 <button type="button" class="layui-btn layui-btn-normal" onclick="saveSubPanelConfig()">
-                                    <i class="layui-icon layui-icon-ok"></i> ±£´æÉèÖÃ
+                                    <i class="layui-icon layui-icon-ok"></i> ä¿å­˜è®¾ç½®
                                 </button>
                             </div>
                         </div>
