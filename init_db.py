@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-¼¯Èº¹ÜÀí²å¼ş - Êı¾İ¿â³õÊ¼»¯
-"""
+"""æ•°æ®åº“åˆå§‹åŒ–è„šæœ¬"""
 
 import os
 import sys
@@ -13,7 +11,7 @@ sys.path.insert(0, PLUGIN_PATH)
 from cluster_main import ClusterDB
 
 if __name__ == '__main__':
-    print("³õÊ¼»¯¼¯Èº¹ÜÀíÊı¾İ¿â...")
+    print("åˆå§‹åŒ–é›†ç¾¤ç®¡ç†æ•°æ®åº“...")
     db = ClusterDB()
-    print("Êı¾İ¿â³õÊ¼»¯Íê³É£¡")
-    print(f"Êı¾İ¿âÂ·¾¶: {db.db_path}")
+    print("æ•°æ®åº“åˆå§‹åŒ–å®Œæˆï¼")
+    print(f"æ•°æ®åº“è·¯å¾„: {db.db_path}")
