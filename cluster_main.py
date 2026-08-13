@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-¼¯Èº¹ÜÀí²å¼ş - Ö÷Ä£¿é
-Ö§³Ö¶à·şÎñÆ÷¼¯Èº¹ÜÀí¡¢Ãæ°å·Ö×é¡¢ÍÏ×§ÅÅĞò
-Ö§³Ö arm ºÍ amd ¼Ü¹¹
+é›†ç¾¤ç®¡ç†æ’ä»¶ - ä¸»æ¨¡å—
+æ”¯æŒå¤šæœåŠ¡å™¨é›†ç¾¤ç®¡ç†ã€é¢æ¿åˆ†ç»„ã€æ‹–æ‹½æ’åº
+æ”¯æŒ arm å’Œ amd æ¶æ„
+å®‰è£…åä¸ä¸»åŠ¨è¿è¡ŒæœåŠ¡
 """
 
 import os
@@ -14,27 +15,25 @@ import subprocess
 import sqlite3
 import platform
 import hashlib
-import hmac
-import base64
 import urllib.request
 import urllib.error
 import ssl
 from datetime import datetime
 
-# ²å¼ş¸ùÄ¿Â¼
+# æ’ä»¶æ ¹ç›®å½•
 PLUGIN_PATH = os.path.dirname(os.path.abspath(__file__))
 PLUGIN_NAME = 'cluster'
 PANEL_PATH = '/www/server/mdserver-web'
 
-# Ìí¼ÓÃæ°åÂ·¾¶
+# æ·»åŠ é¢æ¿è·¯å¾„
 sys.path.insert(0, PANEL_PATH + '/class')
 
-# Êı¾İ¿âÂ·¾¶
+# æ•°æ®åº“è·¯å¾„
 DB_PATH = os.path.join(PLUGIN_PATH, 'data', 'cluster.db')
 
-# ¼Ü¹¹¼ì²â
+
 def get_arch():
-    """»ñÈ¡ÏµÍ³¼Ü¹¹"""
+    """è·å–ç³»ç»Ÿæ¶æ„"""
     machine = platform.machine()
     if machine in ('x86_64', 'AMD64'):
         return 'amd64'
@@ -44,11 +43,12 @@ def get_arch():
         return 'arm'
     return machine
 
+
 ARCH = get_arch()
 
 
 class ClusterDB:
-    """¼¯ÈºÊı¾İ¿â¹ÜÀí"""
+    """é›†ç¾¤æ•°æ®åº“ç®¡ç† - SQLite"""
     
     def __init__(self):
         self.db_path = DB_PATH
@@ -60,12 +60,12 @@ class ClusterDB:
         return conn
     
     def _init_db(self):
-        """³õÊ¼»¯Êı¾İ¿â"""
+        """åˆå§‹åŒ–æ•°æ®åº“è¡¨"""
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         conn = self._get_conn()
         cursor = conn.cursor()
         
-        # Ãæ°å·Ö×é±í
+        # é¢æ¿åˆ†ç»„è¡¨
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS panel_groups (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,7 +78,7 @@ class ClusterDB:
             )
         ''')
         
-        # Ãæ°å½Úµã±í
+        # é¢æ¿èŠ‚ç‚¹è¡¨
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS panel_nodes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,12 +101,11 @@ class ClusterDB:
                 sort_order INTEGER DEFAULT 0,
                 notes TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now','localtime')),
-                updated_at TEXT DEFAULT (datetime('now','localtime')),
-                FOREIGN KEY (group_id) REFERENCES panel_groups(id) ON DELETE SET DEFAULT
+                updated_at TEXT DEFAULT (datetime('now','localtime'))
             )
         ''')
         
-        # ·şÎñ¹ÜÀí±í
+        # æœåŠ¡ç®¡ç†è¡¨
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS panel_services (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,12 +118,11 @@ class ClusterDB:
                 version TEXT DEFAULT '',
                 last_action TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now','localtime')),
-                updated_at TEXT DEFAULT (datetime('now','localtime')),
-                FOREIGN KEY (node_id) REFERENCES panel_nodes(id) ON DELETE CASCADE
+                updated_at TEXT DEFAULT (datetime('now','localtime'))
             )
         ''')
         
-        # Êı¾İ¿âÅäÖÃ±í
+        # æ•°æ®åº“é…ç½®è¡¨
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS db_configs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,12 +136,11 @@ class ClusterDB:
                 db_prefix TEXT DEFAULT 'mw_',
                 status INTEGER DEFAULT 0,
                 created_at TEXT DEFAULT (datetime('now','localtime')),
-                updated_at TEXT DEFAULT (datetime('now','localtime')),
-                FOREIGN KEY (node_id) REFERENCES panel_nodes(id) ON DELETE CASCADE
+                updated_at TEXT DEFAULT (datetime('now','localtime'))
             )
         ''')
         
-        # ×ÓÃæ°åÉèÖÃ±í
+        # å­é¢æ¿è®¾ç½®è¡¨
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS sub_panel_configs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,12 +148,11 @@ class ClusterDB:
                 config_key TEXT NOT NULL,
                 config_value TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now','localtime')),
-                updated_at TEXT DEFAULT (datetime('now','localtime')),
-                FOREIGN KEY (node_id) REFERENCES panel_nodes(id) ON DELETE CASCADE
+                updated_at TEXT DEFAULT (datetime('now','localtime'))
             )
         ''')
         
-        # ²Ù×÷ÈÕÖ¾±í
+        # æ“ä½œæ—¥å¿—è¡¨
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS operation_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -167,18 +163,19 @@ class ClusterDB:
             )
         ''')
         
-        # ³õÊ¼»¯Ä¬ÈÏ·Ö×é
+        # åˆå§‹åŒ–é»˜è®¤åˆ†ç»„
         cursor.execute("SELECT COUNT(*) as cnt FROM panel_groups")
         if cursor.fetchone()['cnt'] == 0:
             cursor.execute(
                 "INSERT INTO panel_groups (name, description, sort_order, color) VALUES (?, ?, ?, ?)",
-                ('Ä¬ÈÏ·Ö×é', 'Ä¬ÈÏ·şÎñÆ÷·Ö×é', 0, '#1E9FFF')
+                ('é»˜è®¤åˆ†ç»„', 'é»˜è®¤æœåŠ¡å™¨åˆ†ç»„', 0, '#1E9FFF')
             )
         
         conn.commit()
         conn.close()
     
-    # ========== ·Ö×é²Ù×÷ ==========
+    # ========== åˆ†ç»„ CRUD ==========
+    
     def get_groups(self):
         conn = self._get_conn()
         rows = conn.execute("SELECT * FROM panel_groups ORDER BY sort_order ASC").fetchall()
@@ -218,7 +215,6 @@ class ClusterDB:
         return True
     
     def reorder_groups(self, group_ids):
-        """ÍÏ×§ÅÅĞò·Ö×é"""
         conn = self._get_conn()
         for i, gid in enumerate(group_ids):
             conn.execute("UPDATE panel_groups SET sort_order = ? WHERE id = ?", (i, gid))
@@ -226,7 +222,8 @@ class ClusterDB:
         conn.close()
         return True
     
-    # ========== ½Úµã²Ù×÷ ==========
+    # ========== èŠ‚ç‚¹ CRUD ==========
+    
     def get_nodes(self, group_id=None):
         conn = self._get_conn()
         if group_id is not None:
@@ -273,16 +270,15 @@ class ClusterDB:
     
     def delete_node(self, node_id):
         conn = self._get_conn()
-        conn.execute("DELETE FROM panel_nodes WHERE id = ?", (node_id,))
         conn.execute("DELETE FROM panel_services WHERE node_id = ?", (node_id,))
         conn.execute("DELETE FROM db_configs WHERE node_id = ?", (node_id,))
         conn.execute("DELETE FROM sub_panel_configs WHERE node_id = ?", (node_id,))
+        conn.execute("DELETE FROM panel_nodes WHERE id = ?", (node_id,))
         conn.commit()
         conn.close()
         return True
     
     def reorder_nodes(self, node_ids):
-        """ÍÏ×§ÅÅĞò½Úµã"""
         conn = self._get_conn()
         for i, nid in enumerate(node_ids):
             conn.execute("UPDATE panel_nodes SET sort_order = ? WHERE id = ?", (i, nid))
@@ -291,15 +287,17 @@ class ClusterDB:
         return True
     
     def move_node_to_group(self, node_id, group_id):
-        """ÒÆ¶¯½Úµãµ½·Ö×é"""
         conn = self._get_conn()
-        conn.execute("UPDATE panel_nodes SET group_id = ?, updated_at = datetime('now','localtime') WHERE id = ?",
-                     (group_id, node_id))
+        conn.execute(
+            "UPDATE panel_nodes SET group_id = ?, updated_at = datetime('now','localtime') WHERE id = ?",
+            (group_id, node_id)
+        )
         conn.commit()
         conn.close()
         return True
     
-    # ========== ·şÎñ²Ù×÷ ==========
+    # ========== æœåŠ¡ CRUD ==========
+    
     def get_services(self, node_id):
         conn = self._get_conn()
         rows = conn.execute(
@@ -314,8 +312,10 @@ class ClusterDB:
         conn.execute(
             "INSERT INTO panel_services (node_id, service_name, auto_start, config_path, port, version) "
             "VALUES (?, ?, ?, ?, ?, ?)",
-            (node_id, service_name, kwargs.get('auto_start', 0),
-             kwargs.get('config_path', ''), kwargs.get('port', 0),
+            (node_id, service_name,
+             kwargs.get('auto_start', 0),
+             kwargs.get('config_path', ''),
+             kwargs.get('port', 0),
              kwargs.get('version', ''))
         )
         conn.commit()
@@ -325,8 +325,8 @@ class ClusterDB:
     def update_service_status(self, service_id, status):
         conn = self._get_conn()
         conn.execute(
-            "UPDATE panel_services SET service_status = ?, last_action = ?, updated_at = datetime('now','localtime') "
-            "WHERE id = ?",
+            "UPDATE panel_services SET service_status = ?, last_action = ?, "
+            "updated_at = datetime('now','localtime') WHERE id = ?",
             (status, status, service_id)
         )
         conn.commit()
@@ -350,7 +350,8 @@ class ClusterDB:
         conn.close()
         return True
     
-    # ========== Êı¾İ¿âÅäÖÃ²Ù×÷ ==========
+    # ========== æ•°æ®åº“é…ç½® ==========
+    
     def get_db_configs(self, node_id=None):
         conn = self._get_conn()
         if node_id:
@@ -389,12 +390,12 @@ class ClusterDB:
         conn.close()
         return True
     
-    # ========== ×ÓÃæ°åÅäÖÃ ==========
+    # ========== å­é¢æ¿é…ç½® ==========
+    
     def get_sub_panel_configs(self, node_id):
         conn = self._get_conn()
         rows = conn.execute(
-            "SELECT * FROM sub_panel_configs WHERE node_id = ?",
-            (node_id,)
+            "SELECT * FROM sub_panel_configs WHERE node_id = ?", (node_id,)
         ).fetchall()
         conn.close()
         return [dict(r) for r in rows]
@@ -408,7 +409,8 @@ class ClusterDB:
         
         if existing:
             conn.execute(
-                "UPDATE sub_panel_configs SET config_value = ?, updated_at = datetime('now','localtime') WHERE id = ?",
+                "UPDATE sub_panel_configs SET config_value = ?, "
+                "updated_at = datetime('now','localtime') WHERE id = ?",
                 (config_value, existing['id'])
             )
         else:
@@ -420,7 +422,8 @@ class ClusterDB:
         conn.close()
         return True
     
-    # ========== ÈÕÖ¾²Ù×÷ ==========
+    # ========== æ—¥å¿— ==========
+    
     def add_log(self, node_id, action, result=''):
         conn = self._get_conn()
         conn.execute(
@@ -443,7 +446,7 @@ class ClusterDB:
 
 
 class ClusterAPI:
-    """¼¯ÈºAPI¹ÜÀí - ÓëÔ¶³ÌÃæ°åÍ¨ĞÅ"""
+    """é›†ç¾¤APIé€šä¿¡ - ä¸è¿œç¨‹é¢æ¿é€šä¿¡"""
     
     def __init__(self, host, port=7200, api_key='', api_secret='', protocol='http'):
         self.host = host
@@ -454,33 +457,34 @@ class ClusterAPI:
         self.base_url = f"{protocol}://{host}:{port}"
     
     def _make_sign(self, request_data):
-        """Éú³ÉAPIÇ©Ãû"""
+        """ç”ŸæˆAPIç­¾å"""
         if not self.api_key or not self.api_secret:
             return {}
         now = int(time.time())
+        token = hashlib.md5(
+            (str(now) + hashlib.md5(
+                (self.api_key + self.api_secret).encode()
+            ).hexdigest()).encode()
+        ).hexdigest()
         data = {
             'request_time': now,
-            'request_token': hashlib.md5((str(now) + hashlib.md5(
-                (self.api_key + self.api_secret).encode()).hexdigest()).encode()).hexdigest()
+            'request_token': token
         }
         data.update(request_data)
         return data
     
-    def _request(self, uri, data=None, method='POST', timeout=10):
-        """·¢ËÍAPIÇëÇó"""
+    def _request(self, uri, data=None, timeout=10):
+        """å‘é€APIè¯·æ±‚"""
         try:
             url = f"{self.base_url}{uri}"
             request_data = self._make_sign(data or {})
             
-            if method == 'GET':
-                params = '&'.join([f"{k}={v}" for k, v in request_data.items()])
-                url = f"{url}?{params}"
-                req = urllib.request.Request(url)
-            else:
+            if request_data:
                 post_data = urllib.parse.urlencode(request_data).encode('utf-8')
                 req = urllib.request.Request(url, data=post_data)
+            else:
+                req = urllib.request.Request(url)
             
-            # ºöÂÔSSLÖ¤ÊéÑéÖ¤
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
@@ -488,37 +492,24 @@ class ClusterAPI:
             response = urllib.request.urlopen(req, timeout=timeout, context=ctx)
             result = json.loads(response.read().decode('utf-8'))
             return result
-        except urllib.error.URLError as e:
-            return {'status': False, 'msg': f'Á¬½ÓÊ§°Ü: {str(e)}'}
         except Exception as e:
             return {'status': False, 'msg': str(e)}
     
     def test_connection(self):
-        """²âÊÔÁ¬½Ó"""
         return self._request('/system?action=GetSystemTotal')
     
     def get_service_status(self, service_name):
-        """»ñÈ¡·şÎñ×´Ì¬"""
         return self._request('/system?action=GetServiceStatus', {'name': service_name})
     
     def service_action(self, service_name, action):
-        """·şÎñ²Ù×÷: start/stop/restart/reload"""
         return self._request('/system?action=ServiceAdmin', {
             'name': service_name,
             'type': action
         })
-    
-    def get_system_info(self):
-        """»ñÈ¡ÏµÍ³ĞÅÏ¢"""
-        return self._request('/system?action=GetSystemTotal')
-    
-    def get_php_info(self):
-        """»ñÈ¡PHPĞÅÏ¢"""
-        return self._request('/php?action=GetPHPInfo')
 
 
 class ClusterManager:
-    """¼¯Èº¹ÜÀíÆ÷"""
+    """é›†ç¾¤ç®¡ç†å™¨ - ä¸šåŠ¡é€»è¾‘å±‚"""
     
     def __init__(self):
         self.db = ClusterDB()
@@ -564,88 +555,74 @@ class ClusterManager:
     
     def test_node_connection(self, node_id):
         nodes = self.db.get_nodes()
-        node = None
-        for n in nodes:
-            if n['id'] == node_id:
-                node = n
-                break
+        node = next((n for n in nodes if n['id'] == node_id), None)
         if not node:
-            return {'status': False, 'msg': '½Úµã²»´æÔÚ'}
+            return {'status': False, 'msg': 'èŠ‚ç‚¹ä¸å­˜åœ¨'}
         
-        api = ClusterAPI(node['host'], node['port'], node['api_key'], node['api_secret'], node['protocol'])
+        api = ClusterAPI(node['host'], node['port'],
+                         node['api_key'], node['api_secret'],
+                         node['protocol'])
         result = api.test_connection()
         
-        # ¸üĞÂ½Úµã×´Ì¬
         if result.get('status'):
-            self.db.update_node(node_id, status=1, last_check=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            self.db.update_node(node_id, status=1,
+                                last_check=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             if 'data' in result:
-                system_info = result['data']
+                info = result['data']
                 self.db.update_node(node_id,
-                    os_info=system_info.get('system', ''),
-                    panel_version=system_info.get('version', ''),
-                    cpu_usage=system_info.get('cpu', 0),
-                    memory_usage=system_info.get('mem', 0),
-                    disk_usage=system_info.get('disk', 0),
-                    uptime=system_info.get('uptime', '')
+                    os_info=str(info.get('system', '')),
+                    panel_version=str(info.get('version', '')),
+                    cpu_usage=float(info.get('cpu', 0)),
+                    memory_usage=float(info.get('mem', 0)),
+                    disk_usage=float(info.get('disk', 0)),
+                    uptime=str(info.get('uptime', ''))
                 )
         else:
-            self.db.update_node(node_id, status=0, last_check=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            self.db.update_node(node_id, status=0,
+                                last_check=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
-        self.db.add_log(node_id, f'Á¬½Ó²âÊÔ: {result.get("status", False)}', str(result))
+        self.db.add_log(node_id, f'è¿æ¥æµ‹è¯•: {result.get("status")}', str(result))
         return result
     
     def service_action(self, node_id, service_name, action):
-        """¶ÔÔ¶³Ì½ÚµãÖ´ĞĞ·şÎñ²Ù×÷"""
         nodes = self.db.get_nodes()
-        node = None
-        for n in nodes:
-            if n['id'] == node_id:
-                node = n
-                break
+        node = next((n for n in nodes if n['id'] == node_id), None)
         if not node:
-            return {'status': False, 'msg': '½Úµã²»´æÔÚ'}
+            return {'status': False, 'msg': 'èŠ‚ç‚¹ä¸å­˜åœ¨'}
         
-        api = ClusterAPI(node['host'], node['port'], node['api_key'], node['api_secret'], node['protocol'])
+        api = ClusterAPI(node['host'], node['port'],
+                         node['api_key'], node['api_secret'],
+                         node['protocol'])
         result = api.service_action(service_name, action)
         
-        # ¸üĞÂ·şÎñ×´Ì¬
         services = self.db.get_services(node_id)
         for svc in services:
             if svc['service_name'] == service_name:
-                if action == 'start':
+                if action in ('start', 'restart', 'reload'):
                     self.db.update_service_status(svc['id'], 'running')
                 elif action == 'stop':
                     self.db.update_service_status(svc['id'], 'stopped')
-                elif action == 'restart':
-                    self.db.update_service_status(svc['id'], 'running')
-                elif action == 'reload':
-                    self.db.update_service_status(svc['id'], 'running')
         
-        self.db.add_log(node_id, f'·şÎñ²Ù×÷: {service_name} {action}', str(result))
+        self.db.add_log(node_id, f'æœåŠ¡æ“ä½œ: {service_name} {action}', str(result))
         return result
     
     def get_node_services(self, node_id):
-        """»ñÈ¡½Úµã·şÎñÁĞ±í"""
         nodes = self.db.get_nodes()
-        node = None
-        for n in nodes:
-            if n['id'] == node_id:
-                node = n
-                break
-        
+        node = next((n for n in nodes if n['id'] == node_id), None)
         services = self.db.get_services(node_id)
         
-        # ³¢ÊÔ´ÓÔ¶³Ì»ñÈ¡ÊµÊ±×´Ì¬
         if node and node['status'] == 1:
             try:
-                api = ClusterAPI(node['host'], node['port'], node['api_key'], node['api_secret'], node['protocol'])
+                api = ClusterAPI(node['host'], node['port'],
+                                 node['api_key'], node['api_secret'],
+                                 node['protocol'])
                 for svc in services:
                     result = api.get_service_status(svc['service_name'])
                     if result.get('status'):
                         real_status = result.get('data', {}).get('status', 'unknown')
                         self.db.update_service_status(svc['id'], real_status)
                         svc['service_status'] = real_status
-            except:
+            except Exception:
                 pass
         
         return services
@@ -666,17 +643,27 @@ class ClusterManager:
         return self.db.get_logs(limit)
     
     def get_common_services(self):
-        """»ñÈ¡³£ÓÃ·şÎñÁĞ±í"""
         return [
-            {'name': 'nginx', 'display': 'Nginx', 'port': 80, 'config_path': '/www/server/nginx/conf/nginx.conf'},
-            {'name': 'apache', 'display': 'Apache', 'port': 80, 'config_path': '/www/server/apache/conf/httpd.conf'},
-            {'name': 'mysql', 'display': 'MySQL', 'port': 3306, 'config_path': '/etc/my.cnf'},
-            {'name': 'mariadb', 'display': 'MariaDB', 'port': 3306, 'config_path': '/etc/my.cnf'},
-            {'name': 'postgresql', 'display': 'PostgreSQL', 'port': 5432, 'config_path': '/www/server/pgsql/data/postgresql.conf'},
-            {'name': 'php', 'display': 'PHP-FPM', 'port': 9000, 'config_path': '/www/server/php/etc/php-fpm.conf'},
-            {'name': 'redis', 'display': 'Redis', 'port': 6379, 'config_path': '/www/server/redis/redis.conf'},
-            {'name': 'memcached', 'display': 'Memcached', 'port': 11211, 'config_path': ''},
-            {'name': 'pure-ftpd', 'display': 'Pure-Ftpd', 'port': 21, 'config_path': '/www/server/pure-ftpd/etc/pure-ftpd.conf'},
-            {'name': 'openresty', 'display': 'OpenResty', 'port': 80, 'config_path': '/www/server/openresty/nginx/conf/nginx.conf'},
-            {'name': 'mongodb', 'display': 'MongoDB', 'port': 27017, 'config_path': '/www/server/mongodb/config.conf'},
+            {'name': 'nginx', 'display': 'Nginx', 'port': 80,
+             'config_path': '/www/server/nginx/conf/nginx.conf'},
+            {'name': 'apache', 'display': 'Apache', 'port': 80,
+             'config_path': '/www/server/apache/conf/httpd.conf'},
+            {'name': 'mysql', 'display': 'MySQL', 'port': 3306,
+             'config_path': '/etc/my.cnf'},
+            {'name': 'mariadb', 'display': 'MariaDB', 'port': 3306,
+             'config_path': '/etc/my.cnf'},
+            {'name': 'postgresql', 'display': 'PostgreSQL', 'port': 5432,
+             'config_path': '/www/server/pgsql/data/postgresql.conf'},
+            {'name': 'php', 'display': 'PHP-FPM', 'port': 9000,
+             'config_path': '/www/server/php/etc/php-fpm.conf'},
+            {'name': 'redis', 'display': 'Redis', 'port': 6379,
+             'config_path': '/www/server/redis/redis.conf'},
+            {'name': 'memcached', 'display': 'Memcached', 'port': 11211,
+             'config_path': ''},
+            {'name': 'pure-ftpd', 'display': 'Pure-Ftpd', 'port': 21,
+             'config_path': '/www/server/pure-ftpd/etc/pure-ftpd.conf'},
+            {'name': 'openresty', 'display': 'OpenResty', 'port': 80,
+             'config_path': '/www/server/openresty/nginx/conf/nginx.conf'},
+            {'name': 'mongodb', 'display': 'MongoDB', 'port': 27017,
+             'config_path': '/www/server/mongodb/config.conf'},
         ]
