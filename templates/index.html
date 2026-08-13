@@ -1,0 +1,166 @@
+<div class="cluster-container">
+    <style>
+        /* 引入外部CSS */
+        @import url('/plugins/cluster/static/css/cluster.css');
+    </style>
+
+    <div class="cluster-header">
+        <h2 class="cluster-title">
+            <i class="layui-icon layui-icon-group"></i> 服务器集群管理
+        </h2>
+        <div class="cluster-arch-info">
+            <span class="layui-badge layui-bg-green">当前架构: {{ arch }}</span>
+            <span class="layui-badge layui-bg-blue">节点数: {{ node_count }}</span>
+            <span class="layui-badge layui-bg-orange">在线: {{ online_count }}</span>
+        </div>
+    </div>
+
+    <!-- 操作按钮区 -->
+    <div class="cluster-toolbar">
+        <div class="layui-btn-group">
+            <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="addGroup()">
+                <i class="layui-icon layui-icon-add-1"></i> 添加分组
+            </button>
+            <button class="layui-btn layui-btn-sm layui-btn-normal" onclick="addNode()">
+                <i class="layui-icon layui-icon-add-circle"></i> 添加节点
+            </button>
+            <button class="layui-btn layui-btn-sm layui-btn-warm" onclick="refreshAll()">
+                <i class="layui-icon layui-icon-refresh"></i> 刷新全部
+            </button>
+        </div>
+        <div class="cluster-search">
+            <input type="text" placeholder="搜索节点..." class="layui-input layui-input-sm" 
+                   style="width:200px;display:inline-block;" oninput="filterNodes(this.value)">
+        </div>
+    </div>
+
+    <!-- 分组和节点区域 -->
+    <div class="cluster-groups-panel" id="groupContainer">
+        {% for group in groups %}
+        <div class="cluster-group-card" data-group-id="{{ group.id }}" 
+             style="border-left: 4px solid {{ group.color }}">
+            <div class="group-header" 
+                 draggable="true" 
+                 ondragstart="dragGroup(event, {{ group.id }})"
+                 ondragover="allowDrop(event)"
+                 ondrop="dropGroup(event, {{ group.id }})">
+                <div class="group-title">
+                    <span class="group-color-dot" style="background:{{ group.color }}"></span>
+                    <strong>{{ group.name }}</strong>
+                    <span class="group-node-count">({{ group.node_count }}台)</span>
+                </div>
+                <div class="group-actions">
+                    <button class="layui-btn layui-btn-xs layui-btn-primary" 
+                            onclick="editGroup({{ group.id }}, '{{ group.name }}', '{{ group.description }}', '{{ group.color }}')">
+                        <i class="layui-icon layui-icon-edit"></i>
+                    </button>
+                    <button class="layui-btn layui-btn-xs layui-btn-danger" 
+                            onclick="deleteGroup({{ group.id }})">
+                        <i class="layui-icon layui-icon-delete"></i>
+                    </button>
+                    <button class="layui-btn layui-btn-xs layui-btn-normal" 
+                            onclick="addNodeToGroup({{ group.id }})">
+                        <i class="layui-icon layui-icon-add-1"></i> 添加节点
+                    </button>
+                </div>
+            </div>
+            <div class="group-nodes" 
+                 ondragover="allowDrop(event)"
+                 ondrop="dropNode(event, {{ group.id }})">
+                {% for node in group.nodes %}
+                <div class="cluster-node-card" 
+                     data-node-id="{{ node.id }}"
+                     draggable="true"
+                     ondragstart="dragNode(event, {{ node.id }})"
+                     ondragover="allowDrop(event)"
+                     ondrop="dropNodeToNode(event, {{ node.id }})">
+                    <div class="node-status-dot {{ 'online' if node.status == 1 else 'offline' }}"></div>
+                    <div class="node-info">
+                        <div class="node-name">{{ node.name }}</div>
+                        <div class="node-host">{{ node.host }}:{{ node.port }}</div>
+                        <div class="node-meta">
+                            <span class="layui-badge layui-bg-cyan">{{ node.arch or 'unknown' }}</span>
+                            {% if node.status == 1 %}
+                            <span class="node-usage">
+                                CPU: {{ node.cpu_usage }}% | 内存: {{ node.memory_usage }}% | 磁盘: {{ node.disk_usage }}%
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="node-actions">
+                        <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="testNode({{ node.id }})" title="测试连接">
+                            <i class="layui-icon layui-icon-link"></i>
+                        </button>
+                        <button class="layui-btn layui-btn-xs layui-btn-warm" onclick="manageServices({{ node.id }}, '{{ node.name }}')" title="服务管理">
+                            <i class="layui-icon layui-icon-util"></i>
+                        </button>
+                        <button class="layui-btn layui-btn-xs layui-btn-primary" onclick="editNode({{ node.id }})" title="编辑">
+                            <i class="layui-icon layui-icon-edit"></i>
+                        </button>
+                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNode({{ node.id }})" title="删除">
+                            <i class="layui-icon layui-icon-delete"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not group.nodes %}
+                <div class="empty-nodes-hint">
+                    <i class="layui-icon layui-icon-tips"></i> 拖拽节点到此处，或点击"添加节点"
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 未分组节点 -->
+    <div class="cluster-group-card ungrouped" style="border-left: 4px solid #999;">
+        <div class="group-header">
+            <div class="group-title">
+                <span class="group-color-dot" style="background:#999"></span>
+                <strong>未分组</strong>
+                <span class="group-node-count">({{ ungrouped_count }}台)</span>
+            </div>
+        </div>
+        <div class="group-nodes" 
+             ondragover="allowDrop(event)"
+             ondrop="dropNode(event, 0)">
+            {% for node in ungrouped_nodes %}
+            <div class="cluster-node-card" 
+                 data-node-id="{{ node.id }}"
+                 draggable="true"
+                 ondragstart="dragNode(event, {{ node.id }})">
+                <div class="node-status-dot {{ 'online' if node.status == 1 else 'offline' }}"></div>
+                <div class="node-info">
+                    <div class="node-name">{{ node.name }}</div>
+                    <div class="node-host">{{ node.host }}:{{ node.port }}</div>
+                    <div class="node-meta">
+                        <span class="layui-badge layui-bg-cyan">{{ node.arch or 'unknown' }}</span>
+                    </div>
+                </div>
+                <div class="node-actions">
+                    <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="testNode({{ node.id }})">
+                        <i class="layui-icon layui-icon-link"></i>
+                    </button>
+                    <button class="layui-btn layui-btn-xs layui-btn-warm" onclick="manageServices({{ node.id }}, '{{ node.name }}')">
+                        <i class="layui-icon layui-icon-util"></i>
+                    </button>
+                    <button class="layui-btn layui-btn-xs layui-btn-primary" onclick="editNode({{ node.id }})">
+                        <i class="layui-icon layui-icon-edit"></i>
+                    </button>
+                    <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNode({{ node.id }})">
+                        <i class="layui-icon layui-icon-delete"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not ungrouped_nodes %}
+            <div class="empty-nodes-hint">
+                <i class="layui-icon layui-icon-tips"></i> 暂无未分组节点
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="/plugins/cluster/static/js/cluster.js"></script>
