@@ -1,5 +1,5 @@
 #!/bin/bash
-# ¼¯Èº¹ÜÀí²å¼şĞ¶ÔØ½Å±¾
+# é›†ç¾¤ç®¡ç†æ’ä»¶å¸è½½è„šæœ¬
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
@@ -7,14 +7,13 @@ export PATH
 PLUGIN_DIR="/www/server/mdserver-web/plugins/cluster"
 
 echo "============================================="
-echo "  ¼¯Èº¹ÜÀí²å¼ş - Ğ¶ÔØ½Å±¾"
+echo "  é›†ç¾¤ç®¡ç†æ’ä»¶ - å¸è½½è„šæœ¬"
 echo "============================================="
 
-# ÇåÀíÊı¾İ£¨±£ÁôdataÄ¿Â¼¹©ÓÃ»§±¸·İ£©
 if [ -d "${PLUGIN_DIR}/data" ]; then
-    echo "Êı¾İÄ¿Â¼±£ÁôÔÚ: ${PLUGIN_DIR}/data"
-    echo "ÈçĞèÍêÈ«É¾³ı£¬ÇëÊÖ¶¯Ö´ĞĞ: rm -rf ${PLUGIN_DIR}"
+    echo "æ•°æ®ç›®å½•ä¿ç•™åœ¨: ${PLUGIN_DIR}/data"
+    echo "å¦‚éœ€å®Œå…¨åˆ é™¤ï¼Œè¯·æ‰‹åŠ¨æ‰§è¡Œ: rm -rf ${PLUGIN_DIR}"
 fi
 
-echo "²å¼şĞ¶ÔØÍê³É"
+echo "æ’ä»¶å¸è½½å®Œæˆ"
 echo "============================================="
