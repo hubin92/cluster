@@ -1,74 +1,69 @@
 <div class="cluster-container">
-    <style>
-        /* ÒıÈëÍâ²¿CSS */
-        @import url('/plugins/cluster/static/css/cluster.css');
-    </style>
+    <style>@import url('/plugins/cluster/static/css/cluster.css');</style>
 
     <div class="cluster-header">
         <h2 class="cluster-title">
-            <i class="layui-icon layui-icon-group"></i> ·şÎñÆ÷¼¯Èº¹ÜÀí
+            <i class="layui-icon layui-icon-group"></i> æœåŠ¡å™¨é›†ç¾¤ç®¡ç†
         </h2>
         <div class="cluster-arch-info">
-            <span class="layui-badge layui-bg-green">µ±Ç°¼Ü¹¹: {{ arch }}</span>
-            <span class="layui-badge layui-bg-blue">½ÚµãÊı: {{ node_count }}</span>
-            <span class="layui-badge layui-bg-orange">ÔÚÏß: {{ online_count }}</span>
+            <span class="layui-badge layui-bg-green">æ¶æ„: {{ arch }}</span>
+            <span class="layui-badge layui-bg-blue">èŠ‚ç‚¹: {{ node_count }}</span>
+            <span class="layui-badge layui-bg-orange">åœ¨çº¿: {{ online_count }}</span>
         </div>
     </div>
 
-    <!-- ²Ù×÷°´Å¥Çø -->
     <div class="cluster-toolbar">
         <div class="layui-btn-group">
             <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="addGroup()">
-                <i class="layui-icon layui-icon-add-1"></i> Ìí¼Ó·Ö×é
+                <i class="layui-icon layui-icon-add-1"></i> æ·»åŠ åˆ†ç»„
             </button>
             <button class="layui-btn layui-btn-sm layui-btn-normal" onclick="addNode()">
-                <i class="layui-icon layui-icon-add-circle"></i> Ìí¼Ó½Úµã
+                <i class="layui-icon layui-icon-add-circle"></i> æ·»åŠ èŠ‚ç‚¹
             </button>
             <button class="layui-btn layui-btn-sm layui-btn-warm" onclick="refreshAll()">
-                <i class="layui-icon layui-icon-refresh"></i> Ë¢ĞÂÈ«²¿
+                <i class="layui-icon layui-icon-refresh"></i> åˆ·æ–°å…¨éƒ¨
             </button>
         </div>
-        <div class="cluster-search">
-            <input type="text" placeholder="ËÑË÷½Úµã..." class="layui-input layui-input-sm" 
+        <div>
+            <input type="text" placeholder="æœç´¢èŠ‚ç‚¹..." class="layui-input layui-input-sm"
                    style="width:200px;display:inline-block;" oninput="filterNodes(this.value)">
         </div>
     </div>
 
-    <!-- ·Ö×éºÍ½ÚµãÇøÓò -->
     <div class="cluster-groups-panel" id="groupContainer">
         {% for group in groups %}
-        <div class="cluster-group-card" data-group-id="{{ group.id }}" 
+        <div class="cluster-group-card" data-group-id="{{ group.id }}"
              style="border-left: 4px solid {{ group.color }}">
-            <div class="group-header" 
-                 draggable="true" 
+            <div class="group-header"
+                 draggable="true"
                  ondragstart="dragGroup(event, {{ group.id }})"
                  ondragover="allowDrop(event)"
                  ondrop="dropGroup(event, {{ group.id }})">
                 <div class="group-title">
                     <span class="group-color-dot" style="background:{{ group.color }}"></span>
                     <strong>{{ group.name }}</strong>
-                    <span class="group-node-count">({{ group.node_count }}Ì¨)</span>
+                    <span class="group-node-count">({{ group.node_count }}å°)</span>
                 </div>
                 <div class="group-actions">
-                    <button class="layui-btn layui-btn-xs layui-btn-primary" 
+                    <button class="layui-btn layui-btn-xs layui-btn-primary"
                             onclick="editGroup({{ group.id }}, '{{ group.name }}', '{{ group.description }}', '{{ group.color }}')">
                         <i class="layui-icon layui-icon-edit"></i>
                     </button>
-                    <button class="layui-btn layui-btn-xs layui-btn-danger" 
+                    <button class="layui-btn layui-btn-xs layui-btn-danger"
                             onclick="deleteGroup({{ group.id }})">
                         <i class="layui-icon layui-icon-delete"></i>
                     </button>
-                    <button class="layui-btn layui-btn-xs layui-btn-normal" 
+                    <button class="layui-btn layui-btn-xs layui-btn-normal"
                             onclick="addNodeToGroup({{ group.id }})">
-                        <i class="layui-icon layui-icon-add-1"></i> Ìí¼Ó½Úµã
+                        <i class="layui-icon layui-icon-add-1"></i> æ·»åŠ èŠ‚ç‚¹
                     </button>
                 </div>
             </div>
-            <div class="group-nodes" 
+            <div class="group-nodes"
                  ondragover="allowDrop(event)"
                  ondrop="dropNode(event, {{ group.id }})">
                 {% for node in group.nodes %}
-                <div class="cluster-node-card" 
+                <div class="cluster-node-card"
                      data-node-id="{{ node.id }}"
                      draggable="true"
                      ondragstart="dragNode(event, {{ node.id }})"
@@ -81,23 +76,21 @@
                         <div class="node-meta">
                             <span class="layui-badge layui-bg-cyan">{{ node.arch or 'unknown' }}</span>
                             {% if node.status == 1 %}
-                            <span class="node-usage">
-                                CPU: {{ node.cpu_usage }}% | ÄÚ´æ: {{ node.memory_usage }}% | ´ÅÅÌ: {{ node.disk_usage }}%
-                            </span>
+                            <span class="node-usage">CPU:{{ node.cpu_usage }}% MEM:{{ node.memory_usage }}% DISK:{{ node.disk_usage }}%</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="node-actions">
-                        <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="testNode({{ node.id }})" title="²âÊÔÁ¬½Ó">
+                        <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="testNode({{ node.id }})" title="æµ‹è¯•è¿æ¥">
                             <i class="layui-icon layui-icon-link"></i>
                         </button>
-                        <button class="layui-btn layui-btn-xs layui-btn-warm" onclick="manageServices({{ node.id }}, '{{ node.name }}')" title="·şÎñ¹ÜÀí">
+                        <button class="layui-btn layui-btn-xs layui-btn-warm" onclick="manageServices({{ node.id }}, '{{ node.name }}')" title="æœåŠ¡ç®¡ç†">
                             <i class="layui-icon layui-icon-util"></i>
                         </button>
-                        <button class="layui-btn layui-btn-xs layui-btn-primary" onclick="editNode({{ node.id }})" title="±à¼­">
+                        <button class="layui-btn layui-btn-xs layui-btn-primary" onclick="editNode({{ node.id }})" title="ç¼–è¾‘">
                             <i class="layui-icon layui-icon-edit"></i>
                         </button>
-                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNode({{ node.id }})" title="É¾³ı">
+                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNode({{ node.id }})" title="åˆ é™¤">
                             <i class="layui-icon layui-icon-delete"></i>
                         </button>
                     </div>
@@ -105,7 +98,7 @@
                 {% endfor %}
                 {% if not group.nodes %}
                 <div class="empty-nodes-hint">
-                    <i class="layui-icon layui-icon-tips"></i> ÍÏ×§½Úµãµ½´Ë´¦£¬»òµã»÷"Ìí¼Ó½Úµã"
+                    <i class="layui-icon layui-icon-tips"></i> æ‹–æ‹½èŠ‚ç‚¹åˆ°æ­¤å¤„ï¼Œæˆ–ç‚¹å‡»"æ·»åŠ èŠ‚ç‚¹"
                 </div>
                 {% endif %}
             </div>
@@ -113,23 +106,18 @@
         {% endfor %}
     </div>
 
-    <!-- Î´·Ö×é½Úµã -->
     <div class="cluster-group-card ungrouped" style="border-left: 4px solid #999;">
         <div class="group-header">
             <div class="group-title">
                 <span class="group-color-dot" style="background:#999"></span>
-                <strong>Î´·Ö×é</strong>
-                <span class="group-node-count">({{ ungrouped_count }}Ì¨)</span>
+                <strong>æœªåˆ†ç»„</strong>
+                <span class="group-node-count">({{ ungrouped_count }}å°)</span>
             </div>
         </div>
-        <div class="group-nodes" 
-             ondragover="allowDrop(event)"
-             ondrop="dropNode(event, 0)">
+        <div class="group-nodes" ondragover="allowDrop(event)" ondrop="dropNode(event, 0)">
             {% for node in ungrouped_nodes %}
-            <div class="cluster-node-card" 
-                 data-node-id="{{ node.id }}"
-                 draggable="true"
-                 ondragstart="dragNode(event, {{ node.id }})">
+            <div class="cluster-node-card" data-node-id="{{ node.id }}"
+                 draggable="true" ondragstart="dragNode(event, {{ node.id }})">
                 <div class="node-status-dot {{ 'online' if node.status == 1 else 'offline' }}"></div>
                 <div class="node-info">
                     <div class="node-name">{{ node.name }}</div>
@@ -156,7 +144,7 @@
             {% endfor %}
             {% if not ungrouped_nodes %}
             <div class="empty-nodes-hint">
-                <i class="layui-icon layui-icon-tips"></i> ÔİÎŞÎ´·Ö×é½Úµã
+                <i class="layui-icon layui-icon-tips"></i> æš‚æ— æœªåˆ†ç»„èŠ‚ç‚¹
             </div>
             {% endif %}
         </div>
