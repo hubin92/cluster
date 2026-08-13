@@ -1,0 +1,35 @@
+{
+    "id": "cluster",
+    "name": "集群管理",
+    "title": "服务器集群管理",
+    "version": "1.0.0",
+    "description": "管理多台服务器的集群管理插件",
+    "author": "mw-cluster",
+    "type": "tools",
+    "ps": "服务器集群管理，支持面板分组、拖拽排序",
+    "status": "1",
+    "arch": "all",
+    "panel": true,
+    "menu": [
+        {
+            "title": "集群概览",
+            "url": "/cluster/index",
+            "icon": "layui-icon layui-icon-group"
+        },
+        {
+            "title": "面板分组",
+            "url": "/cluster/groups",
+            "icon": "layui-icon layui-icon-component"
+        },
+        {
+            "title": "服务管理",
+            "url": "/cluster/services",
+            "icon": "layui-icon layui-icon-util"
+        },
+        {
+            "title": "子面板设置",
+            "url": "/cluster/settings",
+            "icon": "layui-icon layui-icon-set"
+        }
+    ]
+}

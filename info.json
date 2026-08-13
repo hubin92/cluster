@@ -1,0 +1,19 @@
+{
+    "name": "集群管理",
+    "title": "服务器集群管理",
+    "version": "1.0.0",
+    "description": "管理多台服务器的集群插件，支持面板分组、拖拽排序、服务管理、子面板设置等功能",
+    "author": "mw-cluster",
+    "home": "https://github.com/midoks/mdserver-web",
+    "type": "tools",
+    "ps": "管理多台已安装面板的服务器，支持分组和拖拽",
+    "status": "1",
+    "arch": "all",
+    "checks": "/www/server/mdserver-web/plugins/cluster/index.json",
+    "min_version": "0.12.0",
+    "php_version": "all",
+    "mysql_version": "all",
+    "nginx_version": "all",
+    "apache_version": "all",
+    "requires": []
+}
