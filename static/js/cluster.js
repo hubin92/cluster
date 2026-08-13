@@ -1,24 +1,13 @@
-/**
- * ¼¯Èº¹ÜÀí²å¼ş - Ç°¶ËJS
- * Ö§³ÖÍÏ×§¡¢·Ö×é¡¢·şÎñ¹ÜÀí
- */
-
-// µ±Ç°¹ÜÀíµÄ½ÚµãID£¨·şÎñ¹ÜÀíÒ³ÃæÊ¹ÓÃ£©
 var currentServiceNodeId = 0;
 var draggingNodeId = null;
 var draggingGroupId = null;
 
-// ========== ÍÏ×§Ïà¹Ø ==========
-
 function allowDrop(ev) {
     ev.preventDefault();
-    // Ìí¼ÓÊÓ¾õ·´À¡
-    if (ev.target.closest('.cluster-group-card')) {
-        ev.target.closest('.cluster-group-card').classList.add('drag-over');
-    }
-    if (ev.target.closest('.cluster-node-card')) {
-        ev.target.closest('.cluster-node-card').classList.add('drag-over');
-    }
+    var card = ev.target.closest('.cluster-group-card');
+    if (card) card.classList.add('drag-over');
+    var node = ev.target.closest('.cluster-node-card');
+    if (node) node.classList.add('drag-over');
 }
 
 function dragGroup(ev, groupId) {
@@ -35,23 +24,22 @@ function dragNode(ev, nodeId) {
 
 function dropGroup(ev, targetGroupId) {
     ev.preventDefault();
-    ev.target.closest('.cluster-group-card')?.classList.remove('drag-over');
-    
+    var card = ev.target.closest('.cluster-group-card');
+    if (card) card.classList.remove('drag-over');
     var data = ev.dataTransfer.getData("text/plain");
     if (data.startsWith("group:")) {
         var sourceGroupId = data.split(":")[1];
-        if (sourceGroupId != targetGroupId) {
-            reorderGroups();
-        }
+        if (sourceGroupId != targetGroupId) reorderGroups();
     }
     draggingGroupId = null;
 }
 
 function dropNode(ev, targetGroupId) {
     ev.preventDefault();
-    ev.target.closest('.cluster-group-card')?.classList.remove('drag-over');
-    ev.target.closest('.cluster-node-card')?.classList.remove('drag-over');
-    
+    var card = ev.target.closest('.cluster-group-card');
+    if (card) card.classList.remove('drag-over');
+    var node = ev.target.closest('.cluster-node-card');
+    if (node) node.classList.remove('drag-over');
     var data = ev.dataTransfer.getData("text/plain");
     if (data.startsWith("node:")) {
         var nodeId = data.split(":")[1];
@@ -62,51 +50,28 @@ function dropNode(ev, targetGroupId) {
 
 function dropNodeToNode(ev, targetNodeId) {
     ev.preventDefault();
-    ev.target.closest('.cluster-node-card')?.classList.remove('drag-over');
-    // ÖØĞÂÅÅĞò½Úµã
+    var node = ev.target.closest('.cluster-node-card');
+    if (node) node.classList.remove('drag-over');
     reorderNodes();
 }
 
-// ÒÆ³ıÍÏ×§ÑùÊ½
-document.addEventListener('dragend', function(ev) {
+document.addEventListener('dragend', function() {
     document.querySelectorAll('.drag-over').forEach(function(el) {
         el.classList.remove('drag-over');
     });
 });
 
-// ========== ·Ö×é²Ù×÷ ==========
-
 function addGroup() {
-    layer.prompt({
-        title: 'Ìí¼Ó·Ö×é',
-        formType: 0,
-        placeholder: 'ÇëÊäÈë·Ö×éÃû³Æ'
-    }, function(name, index) {
-        if (!name) {
-            layer.msg('·Ö×éÃû³Æ²»ÄÜÎª¿Õ');
-            return;
-        }
+    layer.prompt({title: 'æ·»åŠ åˆ†ç»„', formType: 0, placeholder: 'è¯·è¾“å…¥åˆ†ç»„åç§°'}, function(name, index) {
+        if (!name) { layer.msg('åˆ†ç»„åç§°ä¸èƒ½ä¸ºç©º'); return; }
         layer.close(index);
-        
         var color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-        layer.prompt({
-            title: 'Ñ¡ÔñÑÕÉ«£¨¿ÉÑ¡£©',
-            formType: 0,
-            value: color,
-            placeholder: 'ÑÕÉ«ÖµÈç #1E9FFF'
-        }, function(colorVal, idx) {
+        layer.prompt({title: 'é€‰æ‹©é¢œè‰²ï¼ˆå¯é€‰ï¼‰', formType: 0, value: color}, function(colorVal, idx) {
             layer.close(idx);
-            $.post('/cluster/api?action=add_group', {
-                name: name,
-                color: colorVal || color
-            }, function(res) {
+            $.post('/cluster/api?action=add_group', {name: name, color: colorVal || color}, function(res) {
                 res = typeof res === 'string' ? JSON.parse(res) : res;
-                if (res.status) {
-                    layer.msg('Ìí¼Ó³É¹¦', {icon: 1});
-                    setTimeout(function() { location.reload(); }, 800);
-                } else {
-                    layer.msg(res.msg || 'Ìí¼ÓÊ§°Ü', {icon: 2});
-                }
+                if (res.status) { layer.msg('æ·»åŠ æˆåŠŸ', {icon: 1}); setTimeout(function() { location.reload(); }, 800); }
+                else layer.msg(res.msg || 'æ·»åŠ å¤±è´¥', {icon: 2});
             });
         });
     });
@@ -114,71 +79,42 @@ function addGroup() {
 
 function editGroup(id, name, description, color) {
     var html = '<div style="padding:20px;">' +
-        '<div class="layui-form-item"><label>Ãû³Æ</label>' +
-        '<input type="text" id="editGroupName" class="layui-input" value="' + name + '"></div>' +
-        '<div class="layui-form-item"><label>ÃèÊö</label>' +
-        '<input type="text" id="editGroupDesc" class="layui-input" value="' + (description||'') + '"></div>' +
-        '<div class="layui-form-item"><label>ÑÕÉ«</label>' +
-        '<input type="color" id="editGroupColor" class="layui-input" value="' + (color||'#1E9FFF') + '"></div>' +
+        '<div class="layui-form-item"><label>åç§°</label><input type="text" id="editGroupName" class="layui-input" value="' + name + '"></div>' +
+        '<div class="layui-form-item"><label>æè¿°</label><input type="text" id="editGroupDesc" class="layui-input" value="' + (description||'') + '"></div>' +
+        '<div class="layui-form-item"><label>é¢œè‰²</label><input type="color" id="editGroupColor" class="layui-input" value="' + (color||'#1E9FFF') + '"></div>' +
         '</div>';
-    
-    layer.open({
-        type: 1,
-        title: '±à¼­·Ö×é',
-        area: ['400px', '300px'],
-        content: html,
-        btn: ['±£´æ', 'È¡Ïû'],
+    layer.open({type: 1, title: 'ç¼–è¾‘åˆ†ç»„', area: ['400px', '300px'], content: html, btn: ['ä¿å­˜', 'å–æ¶ˆ'],
         yes: function(index) {
-            var newName = $('#editGroupName').val();
-            var newDesc = $('#editGroupDesc').val();
-            var newColor = $('#editGroupColor').val();
             $.post('/cluster/api?action=update_group', {
-                id: id,
-                name: newName,
-                description: newDesc,
-                color: newColor
+                id: id, name: $('#editGroupName').val(), description: $('#editGroupDesc').val(), color: $('#editGroupColor').val()
             }, function(res) {
                 res = typeof res === 'string' ? JSON.parse(res) : res;
-                if (res.status) {
-                    layer.msg('¸üĞÂ³É¹¦', {icon: 1});
-                    layer.close(index);
-                    setTimeout(function() { location.reload(); }, 800);
-                } else {
-                    layer.msg(res.msg || '¸üĞÂÊ§°Ü', {icon: 2});
-                }
+                if (res.status) { layer.msg('æ›´æ–°æˆåŠŸ', {icon: 1}); layer.close(index); setTimeout(function() { location.reload(); }, 800); }
+                else layer.msg(res.msg || 'æ›´æ–°å¤±è´¥', {icon: 2});
             });
         }
     });
 }
 
 function deleteGroup(id) {
-    layer.confirm('È·¶¨É¾³ı¸Ã·Ö×éÂğ£¿·Ö×éÏÂµÄ½Úµã½«ÒÆÖÁ"Î´·Ö×é"', {
-        btn: ['È·¶¨', 'È¡Ïû']
-    }, function(index) {
+    layer.confirm('ç¡®å®šåˆ é™¤è¯¥åˆ†ç»„å—ï¼ŸèŠ‚ç‚¹å°†ç§»è‡³"æœªåˆ†ç»„"', {btn: ['ç¡®å®š', 'å–æ¶ˆ']}, function(index) {
         $.post('/cluster/api?action=delete_group', {id: id}, function(res) {
             res = typeof res === 'string' ? JSON.parse(res) : res;
-            if (res.status) {
-                layer.msg('É¾³ı³É¹¦', {icon: 1});
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                layer.msg(res.msg || 'É¾³ıÊ§°Ü', {icon: 2});
-            }
+            if (res.status) { layer.msg('åˆ é™¤æˆåŠŸ', {icon: 1}); setTimeout(function() { location.reload(); }, 800); }
+            else layer.msg(res.msg || 'åˆ é™¤å¤±è´¥', {icon: 2});
         });
         layer.close(index);
     });
 }
 
 function reorderGroups() {
-    // ÊÕ¼¯ËùÓĞ·Ö×éID
     var groupIds = [];
     document.querySelectorAll('.cluster-group-card[data-group-id]').forEach(function(card) {
         groupIds.push(card.getAttribute('data-group-id'));
     });
     $.post('/cluster/api?action=reorder_groups', {ids: groupIds.join(',')}, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (!res.status) {
-            layer.msg(res.msg || 'ÅÅĞòÊ§°Ü', {icon: 2});
-        }
+        if (!res.status) layer.msg(res.msg || 'æ’åºå¤±è´¥', {icon: 2});
     });
 }
 
@@ -189,136 +125,72 @@ function reorderNodes() {
     });
     $.post('/cluster/api?action=reorder_nodes', {ids: nodeIds.join(',')}, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (!res.status) {
-            layer.msg(res.msg || 'ÅÅĞòÊ§°Ü', {icon: 2});
-        }
+        if (!res.status) layer.msg(res.msg || 'æ’åºå¤±è´¥', {icon: 2});
     });
 }
 
 function moveNodeToGroup(nodeId, groupId) {
-    $.post('/cluster/api?action=move_node', {
-        node_id: nodeId,
-        group_id: groupId
-    }, function(res) {
+    $.post('/cluster/api?action=move_node', {node_id: nodeId, group_id: groupId}, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (res.status) {
-            layer.msg('ÒÆ¶¯³É¹¦', {icon: 1});
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            layer.msg(res.msg || 'ÒÆ¶¯Ê§°Ü', {icon: 2});
-        }
+        if (res.status) { layer.msg('ç§»åŠ¨æˆåŠŸ', {icon: 1}); setTimeout(function() { location.reload(); }, 800); }
+        else layer.msg(res.msg || 'ç§»åŠ¨å¤±è´¥', {icon: 2});
     });
 }
 
-// ========== ½Úµã²Ù×÷ ==========
-
-function addNode() {
-    addNodeToGroup(0);
-}
+function addNode() { addNodeToGroup(0); }
 
 function addNodeToGroup(groupId) {
     var html = '<div style="padding:20px;">' +
-        '<div class="layui-form-item"><label>½ÚµãÃû³Æ</label>' +
-        '<input type="text" id="addNodeName" class="layui-input" placeholder="Èç: Éú²ú·şÎñÆ÷1"></div>' +
-        '<div class="layui-form-item"><label>Ö÷»úµØÖ·</label>' +
-        '<input type="text" id="addNodeHost" class="layui-input" placeholder="Èç: 192.168.1.100"></div>' +
-        '<div class="layui-form-item"><label>¶Ë¿Ú</label>' +
-        '<input type="number" id="addNodePort" class="layui-input" value="7200"></div>' +
-        '<div class="layui-form-item"><label>API Key</label>' +
-        '<input type="text" id="addNodeApiKey" class="layui-input" placeholder="Ãæ°åAPIÃÜÔ¿"></div>' +
-        '<div class="layui-form-item"><label>API Secret</label>' +
-        '<input type="text" id="addNodeApiSecret" class="layui-input" placeholder="Ãæ°åAPI Secret"></div>' +
-        '<div class="layui-form-item"><label>Ğ­Òé</label>' +
-        '<select id="addNodeProtocol"><option value="http">HTTP</option><option value="https">HTTPS</option></select></div>' +
-        '<div class="layui-form-item"><label>¼Ü¹¹</label>' +
-        '<select id="addNodeArch"><option value="amd64">amd64</option><option value="arm64">arm64</option><option value="arm">arm</option></select></div>' +
-        '<input type="hidden" id="addNodeGroupId" value="' + groupId + '">' +
-        '</div>';
-    
-    layer.open({
-        type: 1,
-        title: 'Ìí¼Ó½Úµã',
-        area: ['500px', '480px'],
-        content: html,
-        btn: ['Ìí¼Ó', 'È¡Ïû'],
+        '<div class="layui-form-item"><label>èŠ‚ç‚¹åç§°</label><input type="text" id="addNodeName" class="layui-input" placeholder="å¦‚: ç”Ÿäº§æœåŠ¡å™¨1"></div>' +
+        '<div class="layui-form-item"><label>ä¸»æœºåœ°å€</label><input type="text" id="addNodeHost" class="layui-input" placeholder="å¦‚: 192.168.1.100"></div>' +
+        '<div class="layui-form-item"><label>ç«¯å£</label><input type="number" id="addNodePort" class="layui-input" value="7200"></div>' +
+        '<div class="layui-form-item"><label>API Key</label><input type="text" id="addNodeApiKey" class="layui-input" placeholder="é¢æ¿APIå¯†é’¥"></div>' +
+        '<div class="layui-form-item"><label>API Secret</label><input type="text" id="addNodeApiSecret" class="layui-input" placeholder="é¢æ¿API Secret"></div>' +
+        '<div class="layui-form-item"><label>åè®®</label><select id="addNodeProtocol"><option value="http">HTTP</option><option value="https">HTTPS</option></select></div>' +
+        '<div class="layui-form-item"><label>æ¶æ„</label><select id="addNodeArch"><option value="amd64">amd64</option><option value="arm64">arm64</option><option value="arm">arm</option></select></div>' +
+        '<input type="hidden" id="addNodeGroupId" value="' + groupId + '"></div>';
+    layer.open({type: 1, title: 'æ·»åŠ èŠ‚ç‚¹', area: ['500px', '480px'], content: html, btn: ['æ·»åŠ ', 'å–æ¶ˆ'],
         yes: function(index) {
             var data = {
-                name: $('#addNodeName').val(),
-                host: $('#addNodeHost').val(),
-                port: $('#addNodePort').val(),
-                api_key: $('#addNodeApiKey').val(),
-                api_secret: $('#addNodeApiSecret').val(),
-                protocol: $('#addNodeProtocol').val(),
-                arch: $('#addNodeArch').val(),
-                group_id: $('#addNodeGroupId').val()
+                name: $('#addNodeName').val(), host: $('#addNodeHost').val(), port: $('#addNodePort').val(),
+                api_key: $('#addNodeApiKey').val(), api_secret: $('#addNodeApiSecret').val(),
+                protocol: $('#addNodeProtocol').val(), arch: $('#addNodeArch').val(), group_id: $('#addNodeGroupId').val()
             };
-            
             if (!data.name || !data.host || !data.api_key || !data.api_secret) {
-                layer.msg('ÇëÌîĞ´ÍêÕûĞÅÏ¢', {icon: 2});
-                return;
+                layer.msg('è¯·å¡«å†™å®Œæ•´ä¿¡æ¯', {icon: 2}); return;
             }
-            
             $.post('/cluster/api?action=add_node', data, function(res) {
                 res = typeof res === 'string' ? JSON.parse(res) : res;
-                if (res.status) {
-                    layer.msg('Ìí¼Ó³É¹¦', {icon: 1});
-                    layer.close(index);
-                    setTimeout(function() { location.reload(); }, 800);
-                } else {
-                    layer.msg(res.msg || 'Ìí¼ÓÊ§°Ü', {icon: 2});
-                }
+                if (res.status) { layer.msg('æ·»åŠ æˆåŠŸ', {icon: 1}); layer.close(index); setTimeout(function() { location.reload(); }, 800); }
+                else layer.msg(res.msg || 'æ·»åŠ å¤±è´¥', {icon: 2});
             });
         }
     });
 }
 
 function editNode(nodeId) {
-    // »ñÈ¡½ÚµãĞÅÏ¢²¢±à¼­
     $.get('/cluster/api?action=get_nodes', function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
         if (res.status && res.data && res.data.nodes) {
             var node = res.data.nodes.find(function(n) { return n.id == nodeId; });
             if (!node) return;
-            
             var html = '<div style="padding:20px;">' +
-                '<div class="layui-form-item"><label>½ÚµãÃû³Æ</label>' +
-                '<input type="text" id="editNodeName" class="layui-input" value="' + (node.name||'') + '"></div>' +
-                '<div class="layui-form-item"><label>Ö÷»úµØÖ·</label>' +
-                '<input type="text" id="editNodeHost" class="layui-input" value="' + (node.host||'') + '"></div>' +
-                '<div class="layui-form-item"><label>¶Ë¿Ú</label>' +
-                '<input type="number" id="editNodePort" class="layui-input" value="' + (node.port||7200) + '"></div>' +
-                '<div class="layui-form-item"><label>API Key</label>' +
-                '<input type="text" id="editNodeApiKey" class="layui-input" value="' + (node.api_key||'') + '"></div>' +
-                '<div class="layui-form-item"><label>API Secret</label>' +
-                '<input type="text" id="editNodeApiSecret" class="layui-input" value="' + (node.api_secret||'') + '"></div>' +
-                '<div class="layui-form-item"><label>±¸×¢</label>' +
-                '<textarea id="editNodeNotes" class="layui-textarea">' + (node.notes||'') + '</textarea></div>' +
-                '</div>';
-            
-            layer.open({
-                type: 1,
-                title: '±à¼­½Úµã',
-                area: ['500px', '450px'],
-                content: html,
-                btn: ['±£´æ', 'È¡Ïû'],
+                '<div class="layui-form-item"><label>èŠ‚ç‚¹åç§°</label><input type="text" id="editNodeName" class="layui-input" value="' + (node.name||'') + '"></div>' +
+                '<div class="layui-form-item"><label>ä¸»æœºåœ°å€</label><input type="text" id="editNodeHost" class="layui-input" value="' + (node.host||'') + '"></div>' +
+                '<div class="layui-form-item"><label>ç«¯å£</label><input type="number" id="editNodePort" class="layui-input" value="' + (node.port||7200) + '"></div>' +
+                '<div class="layui-form-item"><label>API Key</label><input type="text" id="editNodeApiKey" class="layui-input" value="' + (node.api_key||'') + '"></div>' +
+                '<div class="layui-form-item"><label>API Secret</label><input type="text" id="editNodeApiSecret" class="layui-input" value="' + (node.api_secret||'') + '"></div>' +
+                '<div class="layui-form-item"><label>å¤‡æ³¨</label><textarea id="editNodeNotes" class="layui-textarea">' + (node.notes||'') + '</textarea></div></div>';
+            layer.open({type: 1, title: 'ç¼–è¾‘èŠ‚ç‚¹', area: ['500px', '450px'], content: html, btn: ['ä¿å­˜', 'å–æ¶ˆ'],
                 yes: function(index) {
                     $.post('/cluster/api?action=update_node', {
-                        id: nodeId,
-                        name: $('#editNodeName').val(),
-                        host: $('#editNodeHost').val(),
-                        port: $('#editNodePort').val(),
-                        api_key: $('#editNodeApiKey').val(),
-                        api_secret: $('#editNodeApiSecret').val(),
-                        notes: $('#editNodeNotes').val()
+                        id: nodeId, name: $('#editNodeName').val(), host: $('#editNodeHost').val(),
+                        port: $('#editNodePort').val(), api_key: $('#editNodeApiKey').val(),
+                        api_secret: $('#editNodeApiSecret').val(), notes: $('#editNodeNotes').val()
                     }, function(res) {
                         res = typeof res === 'string' ? JSON.parse(res) : res;
-                        if (res.status) {
-                            layer.msg('¸üĞÂ³É¹¦', {icon: 1});
-                            layer.close(index);
-                            setTimeout(function() { location.reload(); }, 800);
-                        } else {
-                            layer.msg(res.msg || '¸üĞÂÊ§°Ü', {icon: 2});
-                        }
+                        if (res.status) { layer.msg('æ›´æ–°æˆåŠŸ', {icon: 1}); layer.close(index); setTimeout(function() { location.reload(); }, 800); }
+                        else layer.msg(res.msg || 'æ›´æ–°å¤±è´¥', {icon: 2});
                     });
                 }
             });
@@ -327,17 +199,11 @@ function editNode(nodeId) {
 }
 
 function deleteNode(nodeId) {
-    layer.confirm('È·¶¨É¾³ı¸Ã½ÚµãÂğ£¿Ïà¹Ø·şÎñÅäÖÃºÍÊı¾İ¿âÅäÖÃÒ²½«±»É¾³ı', {
-        btn: ['È·¶¨', 'È¡Ïû']
-    }, function(index) {
+    layer.confirm('ç¡®å®šåˆ é™¤è¯¥èŠ‚ç‚¹å—ï¼Ÿç›¸å…³æœåŠ¡å’Œé…ç½®ä¹Ÿå°†è¢«åˆ é™¤', {btn: ['ç¡®å®š', 'å–æ¶ˆ']}, function(index) {
         $.post('/cluster/api?action=delete_node', {id: nodeId}, function(res) {
             res = typeof res === 'string' ? JSON.parse(res) : res;
-            if (res.status) {
-                layer.msg('É¾³ı³É¹¦', {icon: 1});
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                layer.msg(res.msg || 'É¾³ıÊ§°Ü', {icon: 2});
-            }
+            if (res.status) { layer.msg('åˆ é™¤æˆåŠŸ', {icon: 1}); setTimeout(function() { location.reload(); }, 800); }
+            else layer.msg(res.msg || 'åˆ é™¤å¤±è´¥', {icon: 2});
         });
         layer.close(index);
     });
@@ -348,38 +214,22 @@ function testNode(nodeId) {
     $.post('/cluster/api?action=test_connection', {id: nodeId}, function(res) {
         layer.close(loadIndex);
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (res.status) {
-            layer.msg('Á¬½Ó³É¹¦£¡', {icon: 1});
-            setTimeout(function() { location.reload(); }, 1000);
-        } else {
-            layer.msg('Á¬½ÓÊ§°Ü: ' + (res.msg || 'Î´Öª´íÎó'), {icon: 2});
-        }
-    }).fail(function() {
-        layer.close(loadIndex);
-        layer.msg('ÇëÇóÊ§°Ü', {icon: 2});
-    });
+        if (res.status) { layer.msg('è¿æ¥æˆåŠŸï¼', {icon: 1}); setTimeout(function() { location.reload(); }, 1000); }
+        else layer.msg('è¿æ¥å¤±è´¥: ' + (res.msg || 'æœªçŸ¥é”™è¯¯'), {icon: 2});
+    }).fail(function() { layer.close(loadIndex); layer.msg('è¯·æ±‚å¤±è´¥', {icon: 2}); });
 }
 
-function refreshAll() {
-    var loadIndex = layer.load(2, {shade: [0.3, '#000']});
-    location.reload();
-}
+function refreshAll() { location.reload(); }
 
 function filterNodes(keyword) {
     var cards = document.querySelectorAll('.cluster-node-card');
     keyword = keyword.toLowerCase();
     cards.forEach(function(card) {
-        var name = card.querySelector('.node-name')?.textContent.toLowerCase() || '';
-        var host = card.querySelector('.node-host')?.textContent.toLowerCase() || '';
-        if (name.indexOf(keyword) > -1 || host.indexOf(keyword) > -1) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
+        var name = (card.querySelector('.node-name')?.textContent || '').toLowerCase();
+        var host = (card.querySelector('.node-host')?.textContent || '').toLowerCase();
+        card.style.display = (name.indexOf(keyword) > -1 || host.indexOf(keyword) > -1) ? '' : 'none';
     });
 }
-
-// ========== ·şÎñ¹ÜÀí ==========
 
 function manageServices(nodeId, nodeName) {
     currentServiceNodeId = nodeId;
@@ -388,7 +238,6 @@ function manageServices(nodeId, nodeName) {
 
 function loadServices() {
     if (!currentServiceNodeId) return;
-    
     $.get('/cluster/api?action=get_services', {node_id: currentServiceNodeId}, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
         if (res.status && res.data) {
@@ -402,61 +251,38 @@ function loadServices() {
 function renderServiceTable(services) {
     var tbody = document.getElementById('serviceTableBody');
     if (!tbody) return;
-    
     var html = '';
     services.forEach(function(svc) {
-        var statusClass = svc.service_status === 'running' ? 'status-running' : 
-                         (svc.service_status === 'stopped' ? 'status-stopped' : 'status-unknown');
-        html += '<tr>' +
-            '<td><strong>' + svc.service_name + '</strong></td>' +
-            '<td><span class="' + statusClass + '">' + svc.service_status + '</span></td>' +
-            '<td>' + (svc.port || '-') + '</td>' +
-            '<td>' + (svc.version || '-') + '</td>' +
-            '<td>' +
-            '<button class="layui-btn layui-btn-xs layui-btn-normal" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'start\')">Æô¶¯</button>' +
-            '<button class="layui-btn layui-btn-xs layui-btn-danger" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'stop\')">Í£Ö¹</button>' +
-            '<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'restart\')">ÖØÆô</button>' +
-            '<button class="layui-btn layui-btn-xs layui-btn-primary" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'reload\')">ÖØÔØÅäÖÃ</button>' +
-            '<button class="layui-btn layui-btn-xs" onclick="deleteService(' + svc.id + ')">É¾³ı</button>' +
-            '</td>' +
-            '</tr>';
+        var cls = svc.service_status === 'running' ? 'status-running' : (svc.service_status === 'stopped' ? 'status-stopped' : 'status-unknown');
+        html += '<tr><td><strong>' + svc.service_name + '</strong></td><td><span class="' + cls + '">' + svc.service_status + '</span></td>' +
+            '<td>' + (svc.port || '-') + '</td><td>' + (svc.version || '-') + '</td><td>' +
+            '<button class="layui-btn layui-btn-xs layui-btn-normal" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'start\')">å¯åŠ¨</button>' +
+            '<button class="layui-btn layui-btn-xs layui-btn-danger" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'stop\')">åœæ­¢</button>' +
+            '<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'restart\')">é‡å¯</button>' +
+            '<button class="layui-btn layui-btn-xs layui-btn-primary" onclick="doServiceAction(' + svc.id + ',\'' + svc.service_name + '\',\'reload\')">é‡è½½é…ç½®</button>' +
+            '<button class="layui-btn layui-btn-xs" onclick="deleteService(' + svc.id + ')">åˆ é™¤</button></td></tr>';
     });
-    
-    if (!services.length) {
-        html = '<tr><td colspan="5" style="text-align:center;color:#999;">ÔİÎŞ·şÎñ£¬ÇëÌí¼Ó</td></tr>';
-    }
+    if (!services.length) html = '<tr><td colspan="5" style="text-align:center;color:#999;">æš‚æ— æœåŠ¡ï¼Œè¯·æ·»åŠ </td></tr>';
     tbody.innerHTML = html;
 }
 
 function renderAutoStartTable(services) {
     var tbody = document.getElementById('autoStartTableBody');
     if (!tbody) return;
-    
     var html = '';
     services.forEach(function(svc) {
-        html += '<tr>' +
-            '<td>' + svc.service_name + '</td>' +
-            '<td>' + (svc.auto_start ? '<span style="color:#5FB878;">ÒÑ¿ªÆô</span>' : '<span style="color:#FF5722;">ÒÑ¹Ø±Õ</span>') + '</td>' +
-            '<td>' +
-            (svc.auto_start ? 
-                '<button class="layui-btn layui-btn-xs layui-btn-danger" onclick="toggleAutoStart(' + svc.id + ',0)">¹Ø±Õ×ÔÆô¶¯</button>' :
-                '<button class="layui-btn layui-btn-xs layui-btn-normal" onclick="toggleAutoStart(' + svc.id + ',1)">¿ªÆô×ÔÆô¶¯</button>'
-            ) +
-            '</td>' +
-            '</tr>';
+        html += '<tr><td>' + svc.service_name + '</td><td>' + (svc.auto_start ? '<span style="color:#5FB878;">å·²å¼€å¯</span>' : '<span style="color:#FF5722;">å·²å…³é—­</span>') + '</td><td>' +
+            (svc.auto_start ? '<button class="layui-btn layui-btn-xs layui-btn-danger" onclick="toggleAutoStart(' + svc.id + ',0)">å…³é—­è‡ªå¯åŠ¨</button>' :
+            '<button class="layui-btn layui-btn-xs layui-btn-normal" onclick="toggleAutoStart(' + svc.id + ',1)">å¼€å¯è‡ªå¯åŠ¨</button>') + '</td></tr>';
     });
-    
-    if (!services.length) {
-        html = '<tr><td colspan="3" style="text-align:center;color:#999;">ÔİÎŞ·şÎñ</td></tr>';
-    }
+    if (!services.length) html = '<tr><td colspan="3" style="text-align:center;color:#999;">æš‚æ— æœåŠ¡</td></tr>';
     tbody.innerHTML = html;
 }
 
 function renderCommonServicesSelect(commonServices) {
     var select = document.getElementById('newServiceSelect');
     if (!select) return;
-    
-    var html = '<option value="">Ñ¡ÔñÒªÌí¼ÓµÄ·şÎñ...</option>';
+    var html = '<option value="">é€‰æ‹©è¦æ·»åŠ çš„æœåŠ¡...</option>';
     commonServices.forEach(function(svc) {
         html += '<option value="' + svc.name + '" data-port="' + svc.port + '" data-config="' + (svc.config_path||'') + '">' + svc.display + '</option>';
     });
@@ -464,162 +290,91 @@ function renderCommonServicesSelect(commonServices) {
 }
 
 function doServiceAction(serviceId, serviceName, action) {
-    var actionNames = {start: 'Æô¶¯', stop: 'Í£Ö¹', restart: 'ÖØÆô', reload: 'ÖØÔØÅäÖÃ'};
-    layer.confirm('È·¶¨Òª' + (actionNames[action] || action) + ' ' + serviceName + ' Âğ£¿', {
-        btn: ['È·¶¨', 'È¡Ïû']
-    }, function(index) {
+    var names = {start: 'å¯åŠ¨', stop: 'åœæ­¢', restart: 'é‡å¯', reload: 'é‡è½½é…ç½®'};
+    layer.confirm('ç¡®å®šè¦' + (names[action] || action) + ' ' + serviceName + ' å—ï¼Ÿ', {btn: ['ç¡®å®š', 'å–æ¶ˆ']}, function(index) {
         layer.close(index);
         var loadIndex = layer.load(2);
-        $.post('/cluster/api?action=service_action', {
-            node_id: currentServiceNodeId,
-            service_name: serviceName,
-            action: action
-        }, function(res) {
+        $.post('/cluster/api?action=service_action', {node_id: currentServiceNodeId, service_name: serviceName, action: action}, function(res) {
             layer.close(loadIndex);
             res = typeof res === 'string' ? JSON.parse(res) : res;
-            if (res.status) {
-                layer.msg('²Ù×÷³É¹¦', {icon: 1});
-                loadServices();
-            } else {
-                layer.msg(res.msg || '²Ù×÷Ê§°Ü', {icon: 2});
-            }
-        }).fail(function() {
-            layer.close(loadIndex);
-            layer.msg('ÇëÇóÊ§°Ü', {icon: 2});
-        });
+            if (res.status) { layer.msg('æ“ä½œæˆåŠŸ', {icon: 1}); loadServices(); }
+            else layer.msg(res.msg || 'æ“ä½œå¤±è´¥', {icon: 2});
+        }).fail(function() { layer.close(loadIndex); layer.msg('è¯·æ±‚å¤±è´¥', {icon: 2}); });
     });
 }
 
 function toggleAutoStart(serviceId, autoStart) {
-    $.post('/cluster/api?action=update_service_auto_start', {
-        service_id: serviceId,
-        auto_start: autoStart
-    }, function(res) {
+    $.post('/cluster/api?action=update_service_auto_start', {service_id: serviceId, auto_start: autoStart}, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (res.status) {
-            layer.msg('¸üĞÂ³É¹¦', {icon: 1});
-            loadServices();
-        } else {
-            layer.msg(res.msg || '¸üĞÂÊ§°Ü', {icon: 2});
-        }
+        if (res.status) { layer.msg('æ›´æ–°æˆåŠŸ', {icon: 1}); loadServices(); }
+        else layer.msg(res.msg || 'æ›´æ–°å¤±è´¥', {icon: 2});
     });
 }
 
 function addServiceToNode() {
     var select = document.getElementById('newServiceSelect');
-    if (!select || !select.value) {
-        layer.msg('ÇëÑ¡ÔñÒªÌí¼ÓµÄ·şÎñ', {icon: 2});
-        return;
-    }
-    
+    if (!select || !select.value) { layer.msg('è¯·é€‰æ‹©è¦æ·»åŠ çš„æœåŠ¡', {icon: 2}); return; }
     var option = select.options[select.selectedIndex];
     $.post('/cluster/api?action=add_service', {
-        node_id: currentServiceNodeId,
-        service_name: select.value,
-        port: option.getAttribute('data-port') || 0,
-        config_path: option.getAttribute('data-config') || ''
+        node_id: currentServiceNodeId, service_name: select.value,
+        port: option.getAttribute('data-port') || 0, config_path: option.getAttribute('data-config') || ''
     }, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (res.status) {
-            layer.msg('Ìí¼Ó³É¹¦', {icon: 1});
-            loadServices();
-        } else {
-            layer.msg(res.msg || 'Ìí¼ÓÊ§°Ü', {icon: 2});
-        }
+        if (res.status) { layer.msg('æ·»åŠ æˆåŠŸ', {icon: 1}); loadServices(); }
+        else layer.msg(res.msg || 'æ·»åŠ å¤±è´¥', {icon: 2});
     });
 }
 
 function deleteService(serviceId) {
-    layer.confirm('È·¶¨É¾³ı¸Ã·şÎñÂğ£¿', function(index) {
+    layer.confirm('ç¡®å®šåˆ é™¤è¯¥æœåŠ¡å—ï¼Ÿ', function(index) {
         $.post('/cluster/api?action=delete_service', {service_id: serviceId}, function(res) {
             res = typeof res === 'string' ? JSON.parse(res) : res;
-            if (res.status) {
-                layer.msg('É¾³ı³É¹¦', {icon: 1});
-                loadServices();
-            } else {
-                layer.msg(res.msg || 'É¾³ıÊ§°Ü', {icon: 2});
-            }
+            if (res.status) { layer.msg('åˆ é™¤æˆåŠŸ', {icon: 1}); loadServices(); }
+            else layer.msg(res.msg || 'åˆ é™¤å¤±è´¥', {icon: 2});
         });
         layer.close(index);
     });
 }
 
-// ========== Êı¾İ¿âÅäÖÃ ==========
-
 function saveDbConfig() {
-    var data = {
-        node_id: currentServiceNodeId || $('#dbNodeId').val(),
-        db_type: $('#dbType').val(),
-        db_host: $('#dbHost').val(),
-        db_port: $('#dbPort').val(),
-        db_name: $('#dbName').val(),
-        db_user: $('#dbUser').val(),
-        db_password: $('#dbPassword').val(),
-        db_prefix: $('#dbPrefix').val()
-    };
-    
-    $.post('/cluster/api?action=save_db_config', data, function(res) {
+    $.post('/cluster/api?action=save_db_config', {
+        node_id: currentServiceNodeId, db_type: $('#dbType').val(), db_host: $('#dbHost').val(),
+        db_port: $('#dbPort').val(), db_name: $('#dbName').val(), db_user: $('#dbUser').val(),
+        db_password: $('#dbPassword').val(), db_prefix: $('#dbPrefix').val()
+    }, function(res) {
         res = typeof res === 'string' ? JSON.parse(res) : res;
-        if (res.status) {
-            layer.msg('±£´æ³É¹¦', {icon: 1});
-        } else {
-            layer.msg(res.msg || '±£´æÊ§°Ü', {icon: 2});
-        }
+        if (res.status) layer.msg('ä¿å­˜æˆåŠŸ', {icon: 1});
+        else layer.msg(res.msg || 'ä¿å­˜å¤±è´¥', {icon: 2});
     });
 }
 
-function testDbConnection() {
-    layer.msg('Êı¾İ¿âÁ¬½Ó²âÊÔ¹¦ÄÜ(ĞèÔÚÔ¶³Ì½ÚµãÊµÏÖ)', {icon: 0});
-}
-
-// ========== ×ÓÃæ°åÉèÖÃ ==========
+function testDbConnection() { layer.msg('æ•°æ®åº“è¿æ¥æµ‹è¯•ï¼ˆéœ€åœ¨è¿œç¨‹èŠ‚ç‚¹å®ç°ï¼‰', {icon: 0}); }
 
 function saveSubPanelConfig() {
     var configs = {
-        'panel_name': $('#subPanelName').val(),
-        'panel_port': $('#subPanelPort').val(),
-        'panel_domain': $('#subPanelDomain').val(),
-        'panel_ssl': $('#subPanelSSL').is(':checked') ? '1' : '0',
-        'panel_entrance': $('#subPanelEntrance').val(),
-        'panel_max_conn': $('#subPanelMaxConn').val()
+        panel_name: $('#subPanelName').val(), panel_port: $('#subPanelPort').val(),
+        panel_domain: $('#subPanelDomain').val(), panel_ssl: $('#subPanelSSL').is(':checked') ? '1' : '0',
+        panel_entrance: $('#subPanelEntrance').val(), panel_max_conn: $('#subPanelMaxConn').val()
     };
-    
     var promises = [];
     for (var key in configs) {
         (function(k, v) {
-            var p = $.post('/cluster/api?action=save_sub_panel_config', {
-                node_id: currentServiceNodeId,
-                config_key: k,
-                config_value: v
-            });
-            promises.push(p);
+            promises.push($.post('/cluster/api?action=save_sub_panel_config', {
+                node_id: currentServiceNodeId, config_key: k, config_value: v
+            }));
         })(key, configs[key]);
     }
-    
-    Promise.all(promises).then(function() {
-        layer.msg('±£´æ³É¹¦', {icon: 1});
-    }).catch(function() {
-        layer.msg('²¿·ÖÉèÖÃ±£´æÊ§°Ü', {icon: 2});
-    });
+    Promise.all(promises).then(function() { layer.msg('ä¿å­˜æˆåŠŸ', {icon: 1}); })
+        .catch(function() { layer.msg('éƒ¨åˆ†è®¾ç½®ä¿å­˜å¤±è´¥', {icon: 2}); });
 }
 
-// ========== ³õÊ¼»¯ ==========
-
 $(document).ready(function() {
-    // ³õÊ¼»¯layui
     if (typeof layui !== 'undefined') {
-        layui.use(['element', 'form'], function() {
-            var element = layui.element;
-            var form = layui.form;
-            form.render();
-        });
+        layui.use(['element', 'form'], function() { layui.form.render(); });
     }
-    
-    // ¼ÓÔØ·şÎñÊı¾İ
     if (document.getElementById('serviceTableBody')) {
-        // ´ÓURL»ñÈ¡node_id
-        var urlParams = new URLSearchParams(window.location.search);
-        currentServiceNodeId = parseInt(urlParams.get('node_id') || '0');
+        var params = new URLSearchParams(window.location.search);
+        currentServiceNodeId = parseInt(params.get('node_id') || '0');
         loadServices();
     }
 });
