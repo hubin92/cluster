@@ -1,33 +1,32 @@
 {
     "id": "cluster",
-    "name": "¼¯Èº¹ÜÀí",
-    "title": "·şÎñÆ÷¼¯Èº¹ÜÀí",
+    "name": "é›†ç¾¤ç®¡ç†",
+    "title": "æœåŠ¡å™¨é›†ç¾¤ç®¡ç†",
     "version": "1.0.0",
-    "description": "¹ÜÀí¶àÌ¨·şÎñÆ÷µÄ¼¯Èº¹ÜÀí²å¼ş",
+    "description": "ç®¡ç†å¤šå°æœåŠ¡å™¨çš„é›†ç¾¤ç®¡ç†æ’ä»¶",
     "author": "mw-cluster",
     "type": "tools",
-    "ps": "·şÎñÆ÷¼¯Èº¹ÜÀí£¬Ö§³ÖÃæ°å·Ö×é¡¢ÍÏ×§ÅÅĞò",
+    "ps": "æœåŠ¡å™¨é›†ç¾¤ç®¡ç†ï¼Œæ”¯æŒé¢æ¿åˆ†ç»„ã€æ‹–æ‹½æ’åº",
     "status": "1",
-    "arch": "all",
     "panel": true,
     "menu": [
         {
-            "title": "¼¯Èº¸ÅÀÀ",
+            "title": "é›†ç¾¤æ¦‚è§ˆ",
             "url": "/cluster/index",
             "icon": "layui-icon layui-icon-group"
         },
         {
-            "title": "Ãæ°å·Ö×é",
+            "title": "é¢æ¿åˆ†ç»„",
             "url": "/cluster/groups",
             "icon": "layui-icon layui-icon-component"
         },
         {
-            "title": "·şÎñ¹ÜÀí",
+            "title": "æœåŠ¡ç®¡ç†",
             "url": "/cluster/services",
             "icon": "layui-icon layui-icon-util"
         },
         {
-            "title": "×ÓÃæ°åÉèÖÃ",
+            "title": "å­é¢æ¿è®¾ç½®",
             "url": "/cluster/settings",
             "icon": "layui-icon layui-icon-set"
         }
